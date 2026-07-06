@@ -1,0 +1,172 @@
+@import "tailwindcss";
+@import "katex/dist/katex.min.css";
+@import "highlight.js/styles/github-dark.css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: oklch(0.985 0 0);
+  --foreground: oklch(0.16 0 0);
+  --card: oklch(0.99 0 0);
+  --card-foreground: oklch(0.16 0 0);
+  --popover: oklch(0.99 0 0);
+  --popover-foreground: oklch(0.16 0 0);
+  --primary: oklch(0.2 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.94 0 0);
+  --secondary-foreground: oklch(0.2 0 0);
+  --muted: oklch(0.94 0 0);
+  --muted-foreground: oklch(0.48 0 0);
+  --accent: oklch(0.54 0.18 257);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.58 0.22 25);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.88 0 0);
+  --input: oklch(0.88 0 0);
+  --ring: oklch(0.54 0.18 257);
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: oklch(0.12 0 0);
+  --foreground: oklch(0.96 0 0);
+  --card: oklch(0.145 0 0);
+  --card-foreground: oklch(0.96 0 0);
+  --popover: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.96 0 0);
+  --primary: oklch(0.96 0 0);
+  --primary-foreground: oklch(0.16 0 0);
+  --secondary: oklch(0.22 0 0);
+  --secondary-foreground: oklch(0.96 0 0);
+  --muted: oklch(0.22 0 0);
+  --muted-foreground: oklch(0.68 0 0);
+  --accent: oklch(0.56 0.18 257);
+  --accent-foreground: oklch(0.98 0 0);
+  --destructive: oklch(0.46 0.18 25);
+  --destructive-foreground: oklch(0.96 0 0);
+  --border: oklch(0.24 0 0);
+  --input: oklch(0.24 0 0);
+  --ring: oklch(0.56 0.18 257);
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans), "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  --font-mono: var(--font-geist-mono), "SFMono-Regular", Consolas, monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+
+  ::selection {
+    @apply bg-accent text-accent-foreground;
+  }
+}
+
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns:
+    minmax(1rem, 1fr)
+    minmax(0, 1120px)
+    minmax(1rem, 1fr);
+}
+
+.content-grid > * {
+  grid-column: 2;
+}
+
+.garden-prose {
+  @apply text-base leading-8 text-foreground/88;
+}
+
+.garden-prose h1,
+.garden-prose h2,
+.garden-prose h3 {
+  @apply scroll-mt-28 text-foreground;
+}
+
+.garden-prose h1 {
+  @apply mt-0 mb-6 text-4xl font-semibold tracking-tight;
+}
+
+.garden-prose h2 {
+  @apply mt-12 mb-4 border-b border-border pb-3 text-2xl font-semibold tracking-tight;
+}
+
+.garden-prose h3 {
+  @apply mt-8 mb-3 text-xl font-semibold;
+}
+
+.garden-prose p,
+.garden-prose ul,
+.garden-prose ol,
+.garden-prose blockquote,
+.garden-prose pre,
+.garden-prose table {
+  @apply my-5;
+}
+
+.garden-prose a {
+  @apply text-accent underline decoration-accent/30 underline-offset-4 transition-colors hover:text-foreground;
+}
+
+.garden-prose blockquote {
+  @apply rounded-md border-l-2 border-accent bg-muted/40 px-5 py-3 text-muted-foreground;
+}
+
+.garden-prose code:not(pre code) {
+  @apply rounded bg-muted px-1.5 py-0.5 font-mono text-sm text-foreground;
+}
+
+.garden-prose pre {
+  @apply overflow-x-auto rounded-lg border border-border bg-[#0b0b0b] p-4 text-sm;
+}
+
+.garden-prose img {
+  @apply rounded-lg border border-border;
+}
+
+.garden-prose mark {
+  @apply rounded bg-accent/20 px-1 text-foreground;
+}

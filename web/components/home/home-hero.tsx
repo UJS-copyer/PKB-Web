@@ -1,0 +1,89 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight, Search } from "lucide-react";
+import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { siteConfig } from "@/lib/site-config";
+
+export function HomeHero() {
+  return (
+    <section className="content-grid border-b border-border">
+      <div className="grid min-h-[calc(100vh-4rem)] items-center gap-12 py-16 lg:grid-cols-[1fr_360px] lg:py-20">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <Badge variant="accent" className="mb-6 font-mono uppercase tracking-[0.24em]">
+            Obsidian Native Garden
+          </Badge>
+          <h1 className="max-w-4xl text-5xl font-semibold tracking-tight text-balance sm:text-6xl lg:text-7xl">
+            {siteConfig.slogan}
+          </h1>
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
+            {siteConfig.description}
+          </p>
+
+          <div className="mt-8 flex max-w-2xl flex-col gap-3 sm:flex-row">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                className="h-12 rounded-full border-border/80 bg-card/60 pl-11"
+                placeholder="搜索笔记、项目、技术关键词..."
+              />
+            </div>
+            <Button asChild size="lg" className="rounded-full">
+              <Link href="/knowledge">
+                Explore
+                <ArrowRight className="size-4" />
+              </Link>
+            </Button>
+          </div>
+
+          <div className="mt-8 flex flex-wrap gap-2">
+            {siteConfig.skills.map((skill) => (
+              <Badge key={skill} variant="outline" className="rounded-full font-mono">
+                {skill}
+              </Badge>
+            ))}
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.65, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          className="relative mx-auto w-full max-w-sm"
+        >
+          <div className="absolute -inset-8 rounded-full border border-accent/20 opacity-60" />
+          <div className="relative overflow-hidden rounded-lg border border-border bg-card p-4">
+            <Image
+              src={siteConfig.avatar}
+              alt="Avatar"
+              width={320}
+              height={320}
+              priority
+              className="aspect-square w-full rounded-md object-cover"
+            />
+            <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
+              <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                Always syncing
+              </span>
+              <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span className="relative flex size-2">
+                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-accent opacity-75" />
+                  <span className="relative inline-flex size-2 rounded-full bg-accent" />
+                </span>
+                Online
+              </span>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}

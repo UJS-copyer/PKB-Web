@@ -1,0 +1,202 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum RepositoryProvider {
+  gitee
+}
+
+enum SyncMode {
+  manual
+  auto
+}
+
+enum SyncJobSource {
+  manual
+  webhook
+  publish_writeback
+  cron_retry
+}
+
+enum SyncJobStatus {
+  pending
+  running
+  success
+  failed
+  ignored
+}
+
+enum NoteStatus {
+  active
+  deleted
+}
+
+model RepositoryConfig {
+  id                 String             @id @default(cuid())
+  provider           RepositoryProvider @default(gitee)
+  repoUrl            String             @default("https://gitee.com/fjw08/obsidian")
+  owner              String             @default("fjw08")
+  repo               String             @default("obsidian")
+  branch             String             @default("master")
+  syncMode           SyncMode           @default(manual)
+  lastSyncedCommit   String?
+  lastSyncedAt       DateTime?
+  tokenEncrypted     String?
+  tokenMasked        String?
+  webhookSecretHash  String?
+  webhookSecretMasked String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+}
+
+model Note {
+  id             String      @id @default(cuid())
+  sourcePath     String      @unique
+  title          String
+  slug           String      @unique
+  description    String?
+  category       String?
+  cover          String?
+  directory      String      @default("")
+  content        String
+  raw            String?
+  excerpt        String?
+  tags           String[]    @default([])
+  links          String[]    @default([])
+  backlinks      String[]    @default([])
+  headings       Json?
+  sha            String?
+  hash           String
+  status         NoteStatus  @default(active)
+  type           String      @default("note")
+  published      Boolean     @default(false)
+  featured       Boolean     @default(false)
+  readingMinutes Int         @default(1)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  sourceUpdatedAt DateTime?
+  assets         Asset[]
+  chunks         EmbeddingChunk[]
+
+  @@index([status, sourceUpdatedAt])
+  @@index([status, published])
+  @@index([status, type])
+}
+
+model Asset {
+  id          String     @id @default(cuid())
+  sourcePath  String     @unique
+  fileName    String
+  mimeType    String?
+  size        Int?
+  sha         String?
+  hash        String?
+  blobUrl     String?
+  status      NoteStatus @default(active)
+  noteId      String?
+  note        Note?      @relation(fields: [noteId], references: [id])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+}
+
+model Link {
+  id         String   @id @default(cuid())
+  sourcePath String
+  target     String
+  resolvedPath String?
+  createdAt  DateTime @default(now())
+
+  @@index([sourcePath])
+}
+
+model EmbeddingChunk {
+  id          String   @id @default(cuid())
+  noteId      String
+  note        Note     @relation(fields: [noteId], references: [id])
+  sourcePath  String
+  chunkIndex  Int
+  heading     String?
+  content     String
+  contentHash String
+  qdrantPointId String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([sourcePath, chunkIndex])
+}
+
+model SyncJob {
+  id          String        @id @default(cuid())
+  source      SyncJobSource
+  status      SyncJobStatus @default(pending)
+  targetPath  String?
+  commitSha   String?
+  summary     Json?
+  error       String?
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  logs        SyncLog[]
+}
+
+model SyncLog {
+  id        String   @id @default(cuid())
+  jobId     String
+  job       SyncJob  @relation(fields: [jobId], references: [id])
+  level     String   @default("info")
+  step      String
+  message   String
+  meta      Json?
+  createdAt DateTime @default(now())
+}
+
+model SiteSetting {
+  id        String   @id @default("singleton")
+  title     String   @default("Rainbell Digital Garden")
+  logo      String?
+  avatar    String?
+  github    String?
+  email     String?
+  themeColor String  @default("#2563eb")
+  darkMode  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AiConfig {
+  id              String   @id @default("singleton")
+  provider        String   @default("openai")
+  chatModel       String   @default("gpt-4o-mini")
+  embeddingModel  String   @default("text-embedding-3-small")
+  chunkSize       Int      @default(900)
+  overlap         Int      @default(120)
+  topK            Int      @default(6)
+  temperature     Float    @default(0.2)
+  systemPrompt    String   @default("你是基于个人知识库回答问题的助手。必须基于引用来源回答。")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model AdminAuditLog {
+  id        String   @id @default(cuid())
+  actor     String?
+  action    String
+  target    String?
+  before    Json?
+  after     Json?
+  status    String   @default("success")
+  createdAt DateTime @default(now())
+}
