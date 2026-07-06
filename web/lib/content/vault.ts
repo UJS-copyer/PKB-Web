@@ -16,7 +16,14 @@ export const assetExtensions = new Set([
   ".tiff"
 ]);
 
-export type NoteMeta = {
+export type NoteDisplayMeta = {
+  displayDate?: string;
+  displayDateLabel: "更新" | "创建" | "同步" | "未设置日期";
+  sortDate: string;
+  hasExplicitDate: boolean;
+};
+
+export type NoteMeta = NoteDisplayMeta & {
   title: string;
   slug: string;
   slugSegments: string[];
@@ -107,8 +114,12 @@ function asArray(value: unknown) {
   return [];
 }
 
+function stripFencedCodeBlocks(input: string) {
+  return input.replace(/```[\s\S]*?```/g, " ").replace(/~~~[\s\S]*?~~~/g, " ");
+}
+
 function firstHeading(content: string) {
-  const match = content.match(/^#\s+(.+)$/m);
+  const match = stripFencedCodeBlocks(content).match(/^#\s+(.+)$/m);
   return match?.[1]?.trim();
 }
 
@@ -130,7 +141,7 @@ function excerptFrom(content: string) {
 }
 
 function extractTags(content: string, frontmatterTags: string[]) {
-  const inlineTags = Array.from(content.matchAll(/(^|\s)#([\p{Letter}\p{Number}_/-]+)/gu)).map(
+  const inlineTags = Array.from(stripFencedCodeBlocks(content).matchAll(/(^|\s)#([\p{Letter}\p{Number}_/-]+)/gu)).map(
     (match) => match[2]
   );
   return Array.from(new Set([...frontmatterTags, ...inlineTags])).filter(Boolean).slice(0, 12);
@@ -172,7 +183,7 @@ export function idFromHeading(text: string) {
 }
 
 function extractHeadings(content: string) {
-  return Array.from(content.matchAll(/^(#{1,4})\s+(.+)$/gm)).map((match) => ({
+  return Array.from(stripFencedCodeBlocks(content).matchAll(/^(#{1,4})\s+(.+)$/gm)).map((match) => ({
     depth: match[1].length,
     text: match[2].trim(),
     id: idFromHeading(match[2])
@@ -181,6 +192,20 @@ function extractHeadings(content: string) {
 
 function dateFromStats(stats: fs.Stats) {
   return stats.mtime.toISOString();
+}
+
+function safeIsoDate(value: unknown) {
+  if (!value) return undefined;
+  const date = value instanceof Date ? value : new Date(String(value));
+  return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+}
+
+function frontmatterDate(data: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const value = safeIsoDate(data[key]);
+    if (value) return value;
+  }
+  return undefined;
 }
 
 export function parseNoteFromRaw(input: {
@@ -192,7 +217,12 @@ export function parseNoteFromRaw(input: {
   const parsed = matter(input.raw);
   const data = parsed.data;
   const slug = slugFromRelativePath(input.relativePath);
-  const fallbackDate = input.updatedAt ?? input.createdAt ?? new Date().toISOString();
+  const fallbackDate = safeIsoDate(input.updatedAt) ?? safeIsoDate(input.createdAt) ?? new Date().toISOString();
+  const explicitUpdatedAt = frontmatterDate(data, ["updatedAt", "updated", "modified", "date"]);
+  const explicitCreatedAt = frontmatterDate(data, ["createdAt", "created", "created_at", "date"]);
+  const createdAt = explicitCreatedAt ?? safeIsoDate(input.createdAt) ?? fallbackDate;
+  const updatedAt = explicitUpdatedAt ?? safeIsoDate(input.updatedAt) ?? fallbackDate;
+  const displayDate = explicitUpdatedAt ?? explicitCreatedAt;
   const title = String(data.title ?? firstHeading(parsed.content) ?? path.basename(input.relativePath, ".md"));
   const published = Boolean(data.published ?? data.publish ?? data.public ?? false);
   const type = String(data.type ?? (published ? "blog" : "note")) as NoteMeta["type"];
@@ -213,8 +243,12 @@ export function parseNoteFromRaw(input: {
     published,
     featured: Boolean(data.featured ?? false),
     type,
-    createdAt: data.createdAt ? new Date(String(data.createdAt)).toISOString() : input.createdAt ?? fallbackDate,
-    updatedAt: data.updatedAt ? new Date(String(data.updatedAt)).toISOString() : input.updatedAt ?? fallbackDate,
+    createdAt,
+    updatedAt,
+    displayDate,
+    displayDateLabel: explicitUpdatedAt ? "更新" : explicitCreatedAt ? "创建" : "同步",
+    sortDate: displayDate ?? updatedAt,
+    hasExplicitDate: Boolean(displayDate),
     excerpt: excerptFrom(parsed.content),
     links: extractLinks(parsed.content),
     backlinks: [] as string[],
@@ -310,8 +344,8 @@ function resolveNote(target: string, titleToNote: Map<string, Note>, pathToNote:
 }
 
 export function getAllNotes() {
-  return getVaultIndex().notes.sort(
-    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+  return [...getVaultIndex().notes].sort(
+    (a, b) => new Date(b.sortDate).getTime() - new Date(a.sortDate).getTime()
   );
 }
 

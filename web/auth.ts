@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import GitHub from "next-auth/providers/github";
+import { adminEmails, isAdminEmail } from "@/lib/admin/access";
 
 function githubProviders() {
   const clientId = process.env.AUTH_GITHUB_ID;
@@ -17,13 +18,6 @@ function githubProviders() {
   return [GitHub({ clientId, clientSecret })];
 }
 
-function adminEmails() {
-  return (process.env.ADMIN_EMAILS ?? "")
-    .split(",")
-    .map((email) => email.trim().toLowerCase())
-    .filter(Boolean);
-}
-
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   providers: githubProviders(),
@@ -33,7 +27,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (process.env.NODE_ENV === "development" && allowList.length === 0) {
         return true;
       }
-      return Boolean(user.email && allowList.includes(user.email.toLowerCase()));
+      return isAdminEmail(user.email);
     }
   }
 });

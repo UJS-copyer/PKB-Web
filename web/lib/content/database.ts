@@ -65,6 +65,7 @@ function toNote(row: {
   sourceUpdatedAt: Date | null;
 }): Note {
   const updatedAt = row.sourceUpdatedAt ?? row.updatedAt;
+  const updatedAtIso = updatedAt.toISOString();
   return {
     title: row.title,
     slug: row.slug,
@@ -80,7 +81,11 @@ function toNote(row: {
     featured: row.featured,
     type: row.type as Note["type"],
     createdAt: row.createdAt.toISOString(),
-    updatedAt: updatedAt.toISOString(),
+    updatedAt: updatedAtIso,
+    displayDate: updatedAtIso,
+    displayDateLabel: "同步",
+    sortDate: updatedAtIso,
+    hasExplicitDate: false,
     excerpt: row.excerpt ?? "",
     links: row.links,
     backlinks: row.backlinks,

@@ -58,14 +58,28 @@ function mimeTypeFor(sourcePath: string) {
   return types[ext] ?? "application/octet-stream";
 }
 
-function parseRemoteNotes(markdownFiles: RemoteMarkdownFile[]) {
-  const notes = markdownFiles.map((file) =>
-    parseNoteFromRaw({
+type ExistingNoteSnapshot = {
+  sourcePath: string;
+  sha: string | null;
+  createdAt: Date;
+  sourceUpdatedAt: Date | null;
+};
+
+function parseRemoteNotes(markdownFiles: RemoteMarkdownFile[], existingByPath: Map<string, ExistingNoteSnapshot>) {
+  const syncedAt = new Date().toISOString();
+  const notes = markdownFiles.map((file) => {
+    const existing = existingByPath.get(file.path);
+    const unchanged = Boolean(existing?.sha && file.sha && existing.sha === file.sha);
+    const previousUpdatedAt = existing?.sourceUpdatedAt?.toISOString() ?? existing?.createdAt.toISOString();
+    const updatedAt = unchanged && previousUpdatedAt ? previousUpdatedAt : syncedAt;
+
+    return parseNoteFromRaw({
       relativePath: file.path,
       raw: file.content,
-      updatedAt: new Date().toISOString()
-    })
-  );
+      createdAt: existing?.createdAt.toISOString(),
+      updatedAt
+    });
+  });
   populateBacklinks(notes);
   return notes;
 }
@@ -186,7 +200,20 @@ export async function syncContentToDatabase(input: {
     };
   }
 
-  const notes = parseRemoteNotes(input.markdownFiles);
+  const existingRows =
+    input.markdownFiles.length > 0
+      ? await prisma.note.findMany({
+          where: { sourcePath: { in: input.markdownFiles.map((file) => file.path) } },
+          select: {
+            sourcePath: true,
+            sha: true,
+            createdAt: true,
+            sourceUpdatedAt: true
+          }
+        })
+      : [];
+  const existingByPath = new Map(existingRows.map((note) => [note.sourcePath, note]));
+  const notes = parseRemoteNotes(input.markdownFiles, existingByPath);
   const noteByPath = new Map(input.markdownFiles.map((file) => [file.path, file]));
   const linkCounts = await mapWithConcurrency(notes, 4, async (note) => {
     const file = noteByPath.get(note.relativePath);

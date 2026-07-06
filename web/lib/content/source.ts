@@ -3,16 +3,13 @@ import "server-only";
 import path from "node:path";
 import { cache } from "react";
 import { databaseConfigured } from "@/lib/db/prisma";
-import type { MarkdownContext } from "./markdown";
+import { prepareMarkdown, type MarkdownContext } from "./markdown";
 import {
   decodeRouteSegments,
   getAllNotes as getVaultNotes,
   getGraphData as getVaultGraphData,
-  getKnowledgeTree as getVaultKnowledgeTree,
   getNoteBySlug as getVaultNoteBySlug,
   getPublishedNotes as getVaultPublishedNotes,
-  getRecentNotes as getVaultRecentNotes,
-  getRelatedNotes as getVaultRelatedNotes,
   resolveAsset as resolveVaultAsset,
   resolveWikiLink as resolveVaultWikiLink,
   type AssetRecord,
@@ -23,6 +20,31 @@ import { getDatabaseAssets, getDatabaseNoteBySlug, getDatabaseNoteMetas, resolve
 
 export { decodeRouteSegments };
 export type { AssetRecord, Note, NoteMeta };
+
+export type KnowledgeTreeNode = {
+  type: "folder";
+  name: string;
+  path: string;
+  children: KnowledgeTreeNode[];
+  notes: NoteMeta[];
+  count: number;
+};
+
+export type NoteDateDisplay = {
+  displayDate: string;
+  displayDateLabel: NoteMeta["displayDateLabel"];
+  sortDate: string;
+};
+
+export type NotePageData = {
+  note: Note;
+  allNotes: NoteMeta[];
+  content: string;
+  backlinks: NoteMeta[];
+  related: NoteMeta[];
+  linkedNotes: NoteMeta[];
+  date: NoteDateDisplay;
+};
 
 function prefersDatabase() {
   if (process.env.NEXT_PHASE === "phase-production-build" || process.env.npm_lifecycle_event === "build") {
@@ -59,11 +81,11 @@ async function readDatabaseAssetsOrNull() {
 }
 
 export const getAllNotes = cache(async () => {
-  return (await readDatabaseNotesOrNull()) ?? getVaultNotes();
+  const notes = (await readDatabaseNotesOrNull()) ?? getVaultNotes();
+  return [...notes].sort((a, b) => dateValue(b) - dateValue(a));
 });
 
 export async function getRecentNotes(limit = 8) {
-  if (!prefersDatabase()) return getVaultRecentNotes(limit);
   return (await getAllNotes()).slice(0, limit);
 }
 
@@ -87,8 +109,8 @@ export async function getNoteBySlug(slugSegments: string[]) {
 }
 
 export async function getRelatedNotes(note: Note, limit = 3) {
-  if (!prefersDatabase()) return getVaultRelatedNotes(note, limit);
   const notes = await getAllNotes();
+  const resolve = createNoteResolver(notes);
   const tagSet = new Set(note.tags);
 
   return notes
@@ -98,7 +120,7 @@ export async function getRelatedNotes(note: Note, limit = 3) {
       score:
         candidate.tags.filter((tag) => tagSet.has(tag)).length +
         (note.backlinks.includes(candidate.slug) ? 2 : 0) +
-        (note.links.some((link) => resolveNoteFromList(link, notes)?.slug === candidate.slug) ? 2 : 0)
+        (note.links.some((link) => resolve(link)?.slug === candidate.slug) ? 2 : 0)
     }))
     .filter((item) => item.score > 0)
     .sort((a, b) => b.score - a.score)
@@ -111,12 +133,11 @@ export async function resolveWikiLink(target: string) {
   return resolveNoteFromList(target, await getAllNotes());
 }
 
-export function resolveWikiLinkFromNotes(target: string, notes: Note[]) {
-  return resolveNoteFromList(target, notes);
+export function resolveWikiLinkFromNotes(target: string, notes: NoteMeta[]) {
+  return createNoteResolver(notes)(target);
 }
 
 export async function getKnowledgeTree() {
-  if (!prefersDatabase()) return getVaultKnowledgeTree();
   const groups = new Map<string, NoteMeta[]>();
 
   for (const note of await getAllNotes()) {
@@ -127,6 +148,10 @@ export async function getKnowledgeTree() {
   return Array.from(groups.entries())
     .sort(([a], [b]) => a.localeCompare(b, "zh-CN"))
     .map(([directory, notes]) => ({ directory, notes }));
+}
+
+export async function getKnowledgeTreeNodes() {
+  return buildKnowledgeTree(await getAllNotes());
 }
 
 export async function getGraphData(limit = 80) {
@@ -177,7 +202,7 @@ export function assetUrl(asset: AssetRecord) {
   return `/api/assets/${asset.relativePath.split("/").map(encodeURIComponent).join("/")}`;
 }
 
-export async function getMarkdownContext(notes: Note[]): Promise<MarkdownContext> {
+export async function getMarkdownContext(notes: NoteMeta[]): Promise<MarkdownContext> {
   if (!prefersDatabase()) {
     return {
       resolveWikiLink: (target) => resolveVaultWikiLink(target) ?? null,
@@ -186,9 +211,181 @@ export async function getMarkdownContext(notes: Note[]): Promise<MarkdownContext
   }
 
   const assets = (await readDatabaseAssetsOrNull()) ?? [];
+  const resolve = createNoteResolver(notes);
   return {
-    resolveWikiLink: (target) => resolveNoteFromList(target, notes),
+    resolveWikiLink: (target) => resolve(target),
     resolveAsset: (target, fromRelativePath) => resolveAssetFromList(target, assets, fromRelativePath),
     assetUrl
   };
+}
+
+export const getNotePageData = cache(async (slugSegments: string[]): Promise<NotePageData | null> => {
+  const note = await getNoteBySlug(slugSegments);
+  if (!note) return null;
+
+  const allNotes = await getAllNotes();
+  const notesBySlug = new Map(allNotes.map((item) => [item.slug, item]));
+  const resolve = createNoteResolver(allNotes);
+  const tagSet = new Set(note.tags);
+
+  const related = allNotes
+    .filter((candidate) => candidate.slug !== note.slug)
+    .map((candidate) => ({
+      note: candidate,
+      score:
+        candidate.tags.filter((tag) => tagSet.has(tag)).length +
+        (note.backlinks.includes(candidate.slug) ? 2 : 0) +
+        (note.links.some((link) => resolve(link)?.slug === candidate.slug) ? 2 : 0)
+    }))
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score || naturalCompare(a.note.title, b.note.title))
+    .slice(0, 5)
+    .map((item) => item.note);
+
+  const backlinks = note.backlinks
+    .map((slug) => notesBySlug.get(slug))
+    .filter((item): item is Note => Boolean(item))
+    .slice(0, 12);
+
+  const relatedSlugs = new Set(related.map((item) => item.slug));
+  const linkedNotes = uniqueNotes(
+    note.links
+      .map((target) => resolve(target))
+      .filter((item): item is NoteMeta => Boolean(item && item.slug !== note.slug && !relatedSlugs.has(item.slug)))
+  ).slice(0, 8);
+
+  const context = await getMarkdownContext(allNotes);
+  const content = prepareMarkdown(note.content, note.relativePath, context);
+
+  return {
+    note,
+    allNotes,
+    content,
+    backlinks,
+    related,
+    linkedNotes,
+    date: formatNoteDate(note)
+  };
+});
+
+function dateValue(note: Pick<NoteMeta, "sortDate" | "updatedAt">) {
+  const value = new Date(note.sortDate ?? note.updatedAt).getTime();
+  return Number.isNaN(value) ? 0 : value;
+}
+
+export function formatNoteDate(note: Pick<NoteMeta, "displayDate" | "displayDateLabel" | "sortDate" | "updatedAt">): NoteDateDisplay {
+  const source = note.displayDate ?? note.sortDate ?? note.updatedAt;
+  const date = new Date(source);
+  if (Number.isNaN(date.getTime())) {
+    return {
+      displayDate: "未设置日期",
+      displayDateLabel: "未设置日期",
+      sortDate: ""
+    };
+  }
+
+  return {
+    displayDate: date.toISOString().slice(0, 10),
+    displayDateLabel: note.displayDateLabel ?? "同步",
+    sortDate: date.toISOString()
+  };
+}
+
+function naturalCompare(a: string, b: string) {
+  return a.localeCompare(b, "zh-CN", {
+    numeric: true,
+    sensitivity: "base"
+  });
+}
+
+function sortNotesByFileName(notes: NoteMeta[]) {
+  return [...notes].sort((a, b) =>
+    naturalCompare(path.posix.basename(a.relativePath, ".md"), path.posix.basename(b.relativePath, ".md"))
+  );
+}
+
+function buildKnowledgeTree(notes: NoteMeta[]): KnowledgeTreeNode[] {
+  const roots: KnowledgeTreeNode[] = [];
+  const folders = new Map<string, KnowledgeTreeNode>();
+
+  for (const note of notes) {
+    const segments = note.directory ? note.directory.split("/").filter(Boolean) : [];
+    let currentPath = "";
+    let level = roots;
+
+    for (const segment of segments) {
+      currentPath = currentPath ? `${currentPath}/${segment}` : segment;
+      let folder = folders.get(currentPath);
+      if (!folder) {
+        folder = {
+          type: "folder",
+          name: segment,
+          path: currentPath,
+          children: [],
+          notes: [],
+          count: 0
+        };
+        folders.set(currentPath, folder);
+        level.push(folder);
+      }
+      level = folder.children;
+    }
+
+    const folder = segments.length > 0 ? folders.get(segments.join("/")) : undefined;
+    if (folder) {
+      folder.notes.push(note);
+    } else {
+      let root = folders.get("Root");
+      if (!root) {
+        root = { type: "folder", name: "Root", path: "", children: [], notes: [], count: 0 };
+        folders.set("Root", root);
+        roots.push(root);
+      }
+      root.notes.push(note);
+    }
+  }
+
+  function sortAndCount(nodes: KnowledgeTreeNode[]) {
+    nodes.sort((a, b) => naturalCompare(a.name, b.name));
+    for (const node of nodes) {
+      node.children = sortAndCount(node.children);
+      node.notes = sortNotesByFileName(node.notes);
+      node.count = node.notes.length + node.children.reduce((sum, child) => sum + child.count, 0);
+    }
+    return nodes;
+  }
+
+  return sortAndCount(roots);
+}
+
+function createNoteResolver(notes: NoteMeta[]) {
+  const titleToNote = new Map<string, NoteMeta>();
+  const pathToNote = new Map<string, NoteMeta>();
+
+  for (const note of notes) {
+    titleToNote.set(note.title, note);
+    titleToNote.set(path.posix.basename(note.relativePath, ".md"), note);
+    pathToNote.set(note.slug, note);
+    pathToNote.set(note.relativePath, note);
+  }
+
+  return (target: string) => {
+    const clean = target.replace(/\.md$/i, "").trim();
+    return (
+      titleToNote.get(clean) ??
+      pathToNote.get(clean) ??
+      pathToNote.get(`${clean}.md`) ??
+      titleToNote.get(path.posix.basename(clean)) ??
+      null
+    );
+  };
+}
+
+function uniqueNotes(notes: NoteMeta[]) {
+  const seen = new Set<string>();
+  return notes.filter((note) => {
+    if (seen.has(note.slug)) return false;
+    seen.add(note.slug);
+    return true;
+  });
 }

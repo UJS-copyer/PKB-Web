@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { ArrowRight, Search } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
@@ -28,21 +27,20 @@ export function HomeHero() {
             {siteConfig.description}
           </p>
 
-          <div className="mt-8 flex max-w-2xl flex-col gap-3 sm:flex-row">
+          <form action="/knowledge" className="mt-8 flex max-w-2xl flex-col gap-3 sm:flex-row">
             <div className="relative flex-1">
               <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
+                name="q"
                 className="h-12 rounded-full border-border/80 bg-card/60 pl-11"
                 placeholder="搜索笔记、项目、技术关键词..."
               />
             </div>
-            <Button asChild size="lg" className="rounded-full">
-              <Link href="/knowledge">
-                Explore
-                <ArrowRight className="size-4" />
-              </Link>
+            <Button type="submit" size="lg" className="rounded-full">
+              Explore
+              <ArrowRight className="size-4" />
             </Button>
-          </div>
+          </form>
 
           <div className="mt-8 flex flex-wrap gap-2">
             {siteConfig.skills.map((skill) => (

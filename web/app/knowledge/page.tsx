@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { KnowledgeShell } from "@/components/knowledge/knowledge-shell";
-import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = {
   title: "Knowledge"
@@ -8,15 +7,17 @@ export const metadata: Metadata = {
 
 export const revalidate = 60;
 
-export default function KnowledgePage() {
+type KnowledgePageProps = {
+  searchParams?: Promise<{ q?: string; query?: string }>;
+};
+
+export default async function KnowledgePage({ searchParams }: KnowledgePageProps) {
+  const params = await searchParams;
+  const initialQuery = params?.q ?? params?.query ?? "";
+
   return (
     <main>
-      <PageHeader
-        eyebrow="Knowledge"
-        title="Obsidian 驱动的知识库"
-        description="目录、链接、反向引用、搜索和图谱都从同一份 Vault 中派生。"
-      />
-      <KnowledgeShell />
+      <KnowledgeShell initialQuery={initialQuery} />
     </main>
   );
 }

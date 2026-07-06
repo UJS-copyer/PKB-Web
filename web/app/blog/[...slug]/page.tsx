@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { MarkdownView } from "@/components/markdown/markdown-view";
 import { Button } from "@/components/ui/button";
 import { prepareMarkdown } from "@/lib/content/markdown";
-import { getAllNotes, getMarkdownContext, getNoteBySlug, getPublishedNotes } from "@/lib/content/source";
+import { formatNoteDate, getAllNotes, getMarkdownContext, getNoteBySlug, getPublishedNotes } from "@/lib/content/source";
 
 type BlogPostProps = {
   params: Promise<{ slug: string[] }>;
@@ -36,6 +36,7 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
   if (!post || (!post.published && post.type !== "blog")) notFound();
   const allNotes = await getAllNotes();
   const markdownContext = await getMarkdownContext(allNotes);
+  const date = formatNoteDate(post);
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
@@ -48,7 +49,7 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
       <article>
         <header className="mb-8 border-b border-border pb-8">
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
-            {new Date(post.updatedAt).toLocaleDateString("zh-CN")} / {post.readingMinutes} min read
+            {date.displayDateLabel} {date.displayDate} / {post.readingMinutes} min read
           </p>
           <h1 className="mt-4 text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
             {post.title}

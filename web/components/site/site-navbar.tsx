@@ -3,9 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, Search } from "lucide-react";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Sheet,
   SheetClose,
@@ -23,12 +21,7 @@ export function SiteNavbar() {
   const publicNav = siteConfig.nav.filter((item) => item.href !== "/admin");
 
   return (
-    <motion.header
-      initial={{ y: -24, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="sticky top-0 z-40 border-b border-border/70 bg-background/82 backdrop-blur-xl"
-    >
+    <header className="sticky top-0 z-40 border-b border-border/70 bg-background/82 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link href="/" className="group flex min-w-0 items-center gap-3">
           <span className="size-2 rounded-full bg-accent transition-transform group-hover:scale-150" />
@@ -62,11 +55,13 @@ export function SiteNavbar() {
           })}
         </nav>
 
-        <div className="hidden min-w-[220px] items-center gap-2 lg:flex">
-          <div className="relative w-full">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input className="h-8 rounded-full pl-9 font-mono text-xs" placeholder="Search knowledge..." />
-          </div>
+        <div className="hidden items-center gap-2 lg:flex">
+          <Button asChild variant="outline" size="sm" className="rounded-full font-mono text-xs">
+            <Link href="/knowledge">
+              <Search className="size-3.5" />
+              Search
+            </Link>
+          </Button>
           <ThemeToggle />
         </div>
 
@@ -107,6 +102,6 @@ export function SiteNavbar() {
           </Sheet>
         </div>
       </div>
-    </motion.header>
+    </header>
   );
 }

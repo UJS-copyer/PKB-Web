@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     template: `%s | ${siteConfig.name}`
   },
   description: siteConfig.description,
-  metadataBase: new URL("https://example.com")
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://pkb-web-online.vercel.app")
 };
 
 export const viewport: Viewport = {

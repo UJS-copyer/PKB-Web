@@ -1,7 +1,9 @@
-import { getGraphData } from "@/lib/content/source";
+type GraphPreviewData = {
+  nodes: Array<{ id: string; title: string; group?: string }>;
+  links: Array<{ source: string; target: string }>;
+};
 
-export async function GraphPreview() {
-  const graph = await getGraphData(28);
+export function GraphPreview({ graph }: { graph: GraphPreviewData }) {
   const nodes = graph.nodes.slice(0, 18);
   const links = graph.links.slice(0, 28);
   const radius = 132;

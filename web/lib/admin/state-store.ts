@@ -220,6 +220,10 @@ export async function saveRepositoryConfig(repository: RepositoryConfig) {
     invalidateAdminCache();
     return toRepositoryConfig(row);
   });
+  if (saved) return saved;
+  if (process.env.NODE_ENV === "production" && shouldUseDatabase()) {
+    throw new Error("Repository settings could not be saved to the database.");
+  }
 
   const state = await readFileState();
   state.repository = repository;

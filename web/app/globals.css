@@ -88,6 +88,7 @@
 
   body {
     @apply bg-background text-foreground antialiased;
+    text-rendering: optimizeLegibility;
   }
 
   ::selection {
@@ -98,9 +99,9 @@
 .noise-overlay {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 1;
   pointer-events: none;
-  opacity: 0.025;
+  opacity: 0.018;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
@@ -117,7 +118,7 @@
 }
 
 .garden-prose {
-  @apply text-base leading-8 text-foreground/88;
+  @apply max-w-none text-[1.03rem] leading-8 text-foreground/88;
 }
 
 .garden-prose h1,
@@ -147,6 +148,15 @@
   @apply my-5;
 }
 
+.garden-prose ul,
+.garden-prose ol {
+  @apply pl-6;
+}
+
+.garden-prose li {
+  @apply my-2;
+}
+
 .garden-prose a {
   @apply text-accent underline decoration-accent/30 underline-offset-4 transition-colors hover:text-foreground;
 }
@@ -163,10 +173,34 @@
   @apply overflow-x-auto rounded-lg border border-border bg-[#0b0b0b] p-4 text-sm;
 }
 
+.garden-prose table {
+  @apply block w-full overflow-x-auto rounded-lg border border-border text-sm;
+}
+
+.garden-prose th,
+.garden-prose td {
+  @apply border-b border-border px-3 py-2 text-left align-top;
+}
+
 .garden-prose img {
   @apply rounded-lg border border-border;
 }
 
 .garden-prose mark {
   @apply rounded bg-accent/20 px-1 text-foreground;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }

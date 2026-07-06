@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifySecret } from "@/lib/security/crypto";
-import { appendSyncLog, getRepositoryConfig } from "@/lib/admin/state-store";
+import { appendSyncLog, getRepositoryConfig, updateSyncJob } from "@/lib/admin/state-store";
 import { enqueueSyncJob } from "@/lib/sync/runner";
 
 function webhookToken(request: Request) {
@@ -19,6 +19,11 @@ export async function POST(request: Request) {
 
   if (config.syncMode !== "auto") {
     const job = await enqueueSyncJob("webhook", undefined, payload.after);
+    await updateSyncJob(job.id, {
+      status: "ignored",
+      finishedAt: new Date().toISOString(),
+      summary: { reason: "sync mode is manual", ref: payload.ref, commitSha: payload.after }
+    });
     await appendSyncLog({
       jobId: job.id,
       level: "warn",
