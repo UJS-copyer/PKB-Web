@@ -23,7 +23,8 @@
 - `SUPABASE_ASSETS_BUCKET`
 - `GITEE_DEFAULT_REPO_URL`
 - `GITEE_DEFAULT_BRANCH`
-- `SYNC_CRON_SECRET`
+- `CRON_SECRET`
+- `SYNC_CRON_SECRET`（兼容旧配置，可与 `CRON_SECRET` 相同）
 - `NEXT_PUBLIC_SITE_URL`
 
 可选：
@@ -47,10 +48,11 @@ Supabase + Prisma 推荐运行时使用 Supavisor pooler，迁移使用 direct c
 
 ## 4. Vercel 部署
 
-- Build Command：`npm run build`
+- Build Command：`npm run prisma:generate && npm run build`
 - Install Command：`npm install`
 - Output：Next.js 默认
-- Cron：`vercel.json` 已配置 `/api/cron/sync` 每 10 分钟处理 pending jobs。
+- Cron：Hobby 账号只能每天运行一次。`vercel.json` 已配置 `/api/cron/sync` 每天 UTC 20:00 运行一次，约为北京时间 04:00。
+- 低成本第一版建议先使用后台手动同步；自动同步模式下，Gitee WebHook 会创建 pending job，Vercel Cron 最多每天处理一次。
 
 ## 5. Gitee WebHook
 
