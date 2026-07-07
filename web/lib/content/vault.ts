@@ -25,6 +25,7 @@ export type NoteDisplayMeta = {
 
 export type NoteMeta = NoteDisplayMeta & {
   title: string;
+  aliases: string[];
   slug: string;
   slugSegments: string[];
   href: string;
@@ -118,11 +119,6 @@ function stripFencedCodeBlocks(input: string) {
   return input.replace(/```[\s\S]*?```/g, " ").replace(/~~~[\s\S]*?~~~/g, " ");
 }
 
-function firstHeading(content: string) {
-  const match = stripFencedCodeBlocks(content).match(/^#\s+(.+)$/m);
-  return match?.[1]?.trim();
-}
-
 function stripMarkdown(input: string) {
   return input
     .replace(/```[\s\S]*?```/g, " ")
@@ -160,6 +156,24 @@ function extractLinks(content: string) {
 
 function slugFromRelativePath(relativePath: string) {
   return relativePath.replace(/\.md$/i, "");
+}
+
+function titleFromRelativePath(relativePath: string) {
+  return path.basename(relativePath, ".md");
+}
+
+function firstHeading(content: string) {
+  const match = stripFencedCodeBlocks(content).match(/^#\s+(.+)$/m);
+  return match?.[1]?.trim();
+}
+
+function frontmatterTitle(value: unknown) {
+  const title = value === undefined || value === null ? "" : String(value).trim();
+  return title || undefined;
+}
+
+function uniqueStrings(values: Array<string | undefined>) {
+  return Array.from(new Set(values.map((value) => value?.trim()).filter((value): value is string => Boolean(value))));
 }
 
 export function decodeRouteSegments(slugSegments: string[]) {
@@ -223,7 +237,9 @@ export function parseNoteFromRaw(input: {
   const createdAt = explicitCreatedAt ?? safeIsoDate(input.createdAt) ?? fallbackDate;
   const updatedAt = explicitUpdatedAt ?? safeIsoDate(input.updatedAt) ?? fallbackDate;
   const displayDate = explicitUpdatedAt ?? explicitCreatedAt;
-  const title = String(data.title ?? firstHeading(parsed.content) ?? path.basename(input.relativePath, ".md"));
+  const fileTitle = titleFromRelativePath(input.relativePath);
+  const headingTitle = firstHeading(parsed.content);
+  const title = frontmatterTitle(data.title) ?? fileTitle;
   const published = Boolean(data.published ?? data.publish ?? data.public ?? false);
   const type = String(data.type ?? (published ? "blog" : "note")) as NoteMeta["type"];
   const tags = extractTags(parsed.content, asArray(data.tags));
@@ -231,6 +247,7 @@ export function parseNoteFromRaw(input: {
 
   return {
     title,
+    aliases: uniqueStrings([fileTitle, headingTitle]).filter((alias) => alias !== title),
     slug,
     slugSegments: slug.split("/"),
     href: `/knowledge/${slug.split("/").map(encodeURIComponent).join("/")}`,
@@ -265,6 +282,9 @@ export function populateBacklinks(notes: Note[]) {
 
   for (const note of notes) {
     titleToNote.set(note.title, note);
+    for (const alias of note.aliases) {
+      titleToNote.set(alias, note);
+    }
     titleToNote.set(path.basename(note.relativePath, ".md"), note);
     pathToNote.set(note.slug, note);
     pathToNote.set(note.relativePath, note);

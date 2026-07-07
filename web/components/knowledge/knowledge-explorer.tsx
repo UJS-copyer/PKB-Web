@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   BookOpen,
@@ -16,6 +15,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PendingLink } from "@/components/navigation/route-progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -106,7 +106,7 @@ export function KnowledgeExplorer({ tree, notes, recent, random, graph, initialQ
   const directory = <DirectoryTree nodes={tree} openFolders={openFolders} onToggle={toggleFolder} />;
 
   return (
-    <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[300px_minmax(0,1fr)_300px] lg:px-8">
+    <div className="mx-auto grid max-w-[1680px] gap-5 px-3 py-5 sm:px-6 sm:py-8 lg:grid-cols-[280px_minmax(0,1fr)] lg:px-8 xl:grid-cols-[300px_minmax(0,1fr)_260px] 2xl:grid-cols-[320px_minmax(0,1fr)_280px]">
       <aside className="hidden lg:block">
         <div className="sticky top-24">
           <PanelTitle icon={Folder} label="Vault" value={`${notes.length} notes`} />
@@ -133,7 +133,8 @@ export function KnowledgeExplorer({ tree, notes, recent, random, graph, initialQ
             </div>
           </div>
 
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+          <div className="sticky top-16 z-20 -mx-5 mt-6 border-y border-border/70 bg-card/95 p-4 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0">
+            <div className="flex flex-col gap-3 sm:flex-row">
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="outline" className="justify-start lg:hidden">
@@ -158,20 +159,21 @@ export function KnowledgeExplorer({ tree, notes, recent, random, graph, initialQ
                 placeholder="搜索标题、路径、标签或正文摘要..."
               />
             </div>
-          </div>
+            </div>
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            {viewModes.map((mode) => (
-              <Button
-                key={mode.value}
-                type="button"
-                variant={viewMode === mode.value ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode(mode.value)}
-              >
-                {mode.label}
-              </Button>
-            ))}
+            <div className="mt-3 flex flex-wrap gap-2">
+              {viewModes.map((mode) => (
+                <Button
+                  key={mode.value}
+                  type="button"
+                  variant={viewMode === mode.value ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode(mode.value)}
+                >
+                  {mode.label}
+                </Button>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -190,18 +192,18 @@ export function KnowledgeExplorer({ tree, notes, recent, random, graph, initialQ
         </section>
       </main>
 
-      <aside className="space-y-5">
+      <aside className="hidden space-y-5 xl:block">
         {random ? (
           <section className="rounded-lg border border-border/80 bg-card/45 p-5">
             <PanelTitle icon={Shuffle} label="随机文章" />
-            <Link href={random.href} prefetch={false} className="mt-4 block text-lg font-medium tracking-tight hover:text-accent">
+            <PendingLink href={random.href} prefetch={false} className="mt-4 block text-lg font-medium tracking-tight hover:text-accent">
               {random.title}
-            </Link>
+            </PendingLink>
             <p className="mt-3 line-clamp-4 text-sm leading-6 text-muted-foreground">{random.excerpt || random.relativePath}</p>
             <Button asChild variant="outline" size="sm" className="mt-5">
-              <Link href={random.href} prefetch={false}>
+              <PendingLink href={random.href} prefetch={false}>
                 阅读
-              </Link>
+              </PendingLink>
             </Button>
           </section>
         ) : null}
@@ -247,7 +249,7 @@ function DirectoryTree({
             {open ? (
               <div className="mt-1 space-y-1 pl-5">
                 {node.notes.map((note) => (
-                  <Link
+                  <PendingLink
                     key={note.slug}
                     href={note.href}
                     prefetch={false}
@@ -256,7 +258,7 @@ function DirectoryTree({
                   >
                     <FileText className="size-3.5 shrink-0" />
                     <span className="min-w-0 flex-1 truncate">{note.title}</span>
-                  </Link>
+                  </PendingLink>
                 ))}
                 {node.children.length > 0 ? (
                   <DirectoryTree nodes={node.children} openFolders={openFolders} onToggle={onToggle} depth={depth + 1} />
@@ -274,10 +276,11 @@ function KnowledgeRow({ note }: { note: NoteListItem }) {
   const date = noteDate(note);
 
   return (
-    <Link
+    <PendingLink
       href={note.href}
       prefetch={false}
-      className="group rounded-lg border border-border/80 bg-card/35 p-5 transition-colors hover:border-accent/40 hover:bg-muted/35"
+      pendingClassName="border-accent/60 bg-muted/40"
+      className="group rounded-lg border border-border/80 bg-card/35 p-4 transition-colors hover:border-accent/40 hover:bg-muted/35 sm:p-5"
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
@@ -296,11 +299,11 @@ function KnowledgeRow({ note }: { note: NoteListItem }) {
             {tag}
           </Badge>
         ))}
-        <span className="ml-auto font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+        <span className="basis-full font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground sm:ml-auto sm:basis-auto">
           {date.label} {date.value}
         </span>
       </div>
-    </Link>
+    </PendingLink>
   );
 }
 

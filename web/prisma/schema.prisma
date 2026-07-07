@@ -165,7 +165,15 @@ model SyncLog {
 
 model SiteSetting {
   id        String   @id @default("singleton")
+  name      String   @default("Rainbell")
   title     String   @default("Rainbell Digital Garden")
+  slogan    String   @default("在持续学习中，把零散想法长成可复用的知识系统。")
+  description String @default("一个由 Obsidian 驱动的个人数字花园，沉淀研究、工程、项目和长期思考。")
+  bio       String   @default("我关注深度学习、图像修复、后端工程与个人知识管理，习惯把研究笔记、工程实践和复盘沉淀在 Obsidian 中。")
+  education String  @default("")
+  research  String  @default("扩散模型、图像修复、古文字图像处理、跨模态方法。")
+  skills    String[] @default([])
+  resumeUrl String?
   logo      String?
   avatar    String?
   github    String?

@@ -364,6 +364,9 @@ function createNoteResolver(notes: NoteMeta[]) {
 
   for (const note of notes) {
     titleToNote.set(note.title, note);
+    for (const alias of note.aliases) {
+      titleToNote.set(alias, note);
+    }
     titleToNote.set(path.posix.basename(note.relativePath, ".md"), note);
     pathToNote.set(note.slug, note);
     pathToNote.set(note.relativePath, note);

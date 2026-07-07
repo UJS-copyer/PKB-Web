@@ -13,6 +13,7 @@ function safeInvalidate(action: () => void) {
 
 export function invalidateAdminCache() {
   clearRuntimeCache("admin:");
+  clearRuntimeCache("site:");
   safeInvalidate(() => revalidateTag("admin"));
   safeInvalidate(() => revalidatePath("/admin"));
   safeInvalidate(() => revalidatePath("/admin/sync"));
@@ -21,10 +22,15 @@ export function invalidateAdminCache() {
 
 export function invalidateContentCache() {
   clearRuntimeCache("content:");
+  clearRuntimeCache("site:");
   safeInvalidate(() => revalidateTag("content"));
   safeInvalidate(() => revalidateTag("assets"));
+  safeInvalidate(() => revalidatePath("/", "layout"));
   safeInvalidate(() => revalidatePath("/"));
   safeInvalidate(() => revalidatePath("/knowledge"));
   safeInvalidate(() => revalidatePath("/blog"));
+  safeInvalidate(() => revalidatePath("/projects"));
+  safeInvalidate(() => revalidatePath("/ai"));
+  safeInvalidate(() => revalidatePath("/about"));
   safeInvalidate(() => revalidatePath("/rss.xml"));
 }

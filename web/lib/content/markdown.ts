@@ -54,9 +54,43 @@ function normalizeCallouts(markdown: string) {
   });
 }
 
+function protectBlocks(
+  markdown: string,
+  pattern: RegExp,
+  normalize: (match: string, ...groups: string[]) => string = (match) => match
+) {
+  const blocks: string[] = [];
+  const output = markdown.replace(pattern, (match, ...groups: string[]) => {
+    const token = `\uE000PKB_BLOCK_${blocks.length}\uE001`;
+    blocks.push(normalize(match, ...groups));
+    return token;
+  });
+
+  return {
+    output,
+    restore(value: string) {
+      return value.replace(/\uE000PKB_BLOCK_(\d+)\uE001/g, (_, index: string) => blocks[Number(index)] ?? "");
+    }
+  };
+}
+
+function normalizeMathBlock(match: string, prefix = "", multiline = "", inline = "") {
+  const body = (multiline || inline).trim();
+  if (!body) return match;
+  return `${prefix}$$\n${body}\n$$`;
+}
+
 export function prepareMarkdown(markdown: string, fromRelativePath: string, context: MarkdownContext = {}) {
-  return normalizeCallouts(markdown.replace(/\u200b/g, ""))
+  const codeBlocks = protectBlocks(markdown.replace(/\u200b/g, ""), /(^|\n)[ \t]*(`{3,}|~{3,})[^\n]*(?:\n[\s\S]*?\n[ \t]*\2[ \t]*(?=\n|$)|$)/g);
+  const mathBlocks = protectBlocks(
+    normalizeCallouts(codeBlocks.output),
+    /(^|\n)[ \t]*\$\$[ \t]*(?:\n([\s\S]*?)\n[ \t]*\$\$[ \t]*(?=\n|$)|([^\n]+?)[ \t]*\$\$[ \t]*(?=\n|$))/g,
+    normalizeMathBlock
+  );
+  const transformed = mathBlocks.output
     .replace(/!\[\[([^\]]+)\]\]/g, (_, value: string) => normalizeObsidianImage(value, fromRelativePath, context))
     .replace(/\[\[([^\]]+)\]\]/g, (_, value: string) => normalizeObsidianLink(value, context))
     .replace(/==([^=\n]+)==/g, "<mark>$1</mark>");
+
+  return codeBlocks.restore(mathBlocks.restore(transformed));
 }

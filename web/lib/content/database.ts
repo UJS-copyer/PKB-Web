@@ -66,8 +66,17 @@ function toNote(row: {
 }): Note {
   const updatedAt = row.sourceUpdatedAt ?? row.updatedAt;
   const updatedAtIso = updatedAt.toISOString();
+  const headings = (row.headings as Note["headings"] | null) ?? [];
+  const fileTitle = path.posix.basename(row.sourcePath, ".md");
+  const headingTitle = headings[0]?.text?.trim();
+  const displayTitle = headingTitle && row.title.trim() === headingTitle && fileTitle !== row.title ? fileTitle : row.title;
+  const aliases = Array.from(
+    new Set([fileTitle, row.title, headingTitle].map((value) => value?.trim()).filter((value): value is string => Boolean(value)))
+  ).filter((alias) => alias !== displayTitle);
+
   return {
-    title: row.title,
+    title: displayTitle,
+    aliases,
     slug: row.slug,
     slugSegments: row.slug.split("/"),
     href: hrefFromSlug(row.slug),
@@ -92,7 +101,7 @@ function toNote(row: {
     readingMinutes: row.readingMinutes,
     content: row.content ?? "",
     raw: row.raw ?? row.content ?? "",
-    headings: (row.headings as Note["headings"] | null) ?? []
+    headings
   };
 }
 
@@ -181,6 +190,9 @@ export function resolveNoteFromList(target: string, notes: Note[]) {
 
   for (const note of notes) {
     titleToNote.set(note.title, note);
+    for (const alias of note.aliases) {
+      titleToNote.set(alias, note);
+    }
     titleToNote.set(path.posix.basename(note.relativePath, ".md"), note);
     pathToNote.set(note.slug, note);
     pathToNote.set(note.relativePath, note);

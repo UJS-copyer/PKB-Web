@@ -3,15 +3,16 @@ import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { siteConfig } from "@/lib/site-config";
+import { Textarea } from "@/components/ui/textarea";
 import { getRepositoryConfig } from "@/lib/admin/state-store";
+import { getSiteSettings } from "@/lib/site-settings";
 
 export const metadata: Metadata = {
   title: "Settings"
 };
 
 export default async function AdminSettingsPage() {
-  const repository = await getRepositoryConfig();
+  const [repository, settings] = await Promise.all([getRepositoryConfig(), getSiteSettings()]);
   const webhookUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://127.0.0.1:3000"}/api/webhooks/gitee`;
 
   return (
@@ -21,28 +22,94 @@ export default async function AdminSettingsPage() {
         title="Settings"
         description="站点基础信息与 Obsidian 私有仓库配置。后台只配置和同步，不编辑正文。"
       />
-      <section className="mx-auto grid max-w-6xl gap-6 px-4 py-10 sm:px-6 lg:grid-cols-[1fr_1fr] lg:px-8">
+      <section className="mx-auto grid max-w-[1400px] gap-6 px-4 py-10 sm:px-6 lg:grid-cols-[minmax(0,1.08fr)_minmax(360px,0.92fr)] lg:px-8">
         <Card>
           <CardHeader>
-            <CardTitle>站点设置</CardTitle>
+            <CardTitle>Site Profile</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-5 md:grid-cols-2">
-            {[
-              ["网站标题", siteConfig.title],
-              ["Logo", siteConfig.name],
-              ["头像", siteConfig.avatar],
-              ["GitHub", siteConfig.github],
-              ["邮箱", siteConfig.email],
-              ["主题色", "#2563eb"]
-            ].map(([label, value]) => (
-              <label key={label} className="grid gap-2 text-sm">
-                <span className="text-muted-foreground">{label}</span>
-                <Input defaultValue={value} />
+          <CardContent>
+            <form action="/api/admin/site-settings" method="post" className="grid gap-5">
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="grid gap-2 text-sm">
+                  <span className="text-muted-foreground">作者名称</span>
+                  <Input name="name" defaultValue={settings.name} required />
+                </label>
+                <label className="grid gap-2 text-sm">
+                  <span className="text-muted-foreground">网站标题</span>
+                  <Input name="title" defaultValue={settings.title} required />
+                </label>
+              </div>
+
+              <label className="grid gap-2 text-sm">
+                <span className="text-muted-foreground">Slogan</span>
+                <Textarea name="slogan" defaultValue={settings.slogan} className="min-h-20" required />
               </label>
-            ))}
-            <div className="md:col-span-2 flex justify-end">
-              <Button>保存设置</Button>
-            </div>
+
+              <label className="grid gap-2 text-sm">
+                <span className="text-muted-foreground">首页简介</span>
+                <Textarea name="description" defaultValue={settings.description} required />
+              </label>
+
+              <label className="grid gap-2 text-sm">
+                <span className="text-muted-foreground">个人简介</span>
+                <Textarea name="bio" defaultValue={settings.bio} className="min-h-32" required />
+              </label>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="grid gap-2 text-sm">
+                  <span className="text-muted-foreground">教育经历</span>
+                  <Textarea name="education" defaultValue={settings.education} />
+                </label>
+                <label className="grid gap-2 text-sm">
+                  <span className="text-muted-foreground">研究方向</span>
+                  <Textarea name="research" defaultValue={settings.research} />
+                </label>
+              </div>
+
+              <label className="grid gap-2 text-sm">
+                <span className="text-muted-foreground">技能栈（每行或逗号分隔）</span>
+                <Textarea name="skills" defaultValue={settings.skills.join("\n")} className="min-h-28 font-mono" />
+              </label>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="grid gap-2 text-sm">
+                  <span className="text-muted-foreground">头像 URL / 路径</span>
+                  <Input name="avatar" defaultValue={settings.avatar} />
+                </label>
+                <label className="grid gap-2 text-sm">
+                  <span className="text-muted-foreground">简历链接</span>
+                  <Input name="resumeUrl" defaultValue={settings.resumeUrl ?? ""} />
+                </label>
+                <label className="grid gap-2 text-sm">
+                  <span className="text-muted-foreground">GitHub</span>
+                  <Input name="github" defaultValue={settings.github ?? ""} />
+                </label>
+                <label className="grid gap-2 text-sm">
+                  <span className="text-muted-foreground">邮箱</span>
+                  <Input name="email" defaultValue={settings.email ?? ""} />
+                </label>
+                <label className="grid gap-2 text-sm">
+                  <span className="text-muted-foreground">主题色</span>
+                  <Input name="themeColor" defaultValue={settings.themeColor} />
+                </label>
+                <label className="grid gap-2 text-sm">
+                  <span className="text-muted-foreground">默认暗色模式</span>
+                  <select
+                    name="darkMode"
+                    defaultValue={settings.darkMode ? "true" : "false"}
+                    className="h-10 rounded-md border border-input bg-background/60 px-3 text-sm"
+                  >
+                    <option value="true">开启</option>
+                    <option value="false">关闭</option>
+                  </select>
+                </label>
+              </div>
+
+              <input name="logo" type="hidden" defaultValue={settings.logo ?? ""} />
+              <div className="flex justify-end">
+                <Button type="submit">保存站点资料</Button>
+              </div>
+            </form>
           </CardContent>
         </Card>
         <Card>

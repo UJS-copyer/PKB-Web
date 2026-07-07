@@ -1,17 +1,16 @@
 "use client";
 
-import Image from "next/image";
 import { ArrowRight, Search } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { siteConfig } from "@/lib/site-config";
+import type { SiteSettings } from "@/lib/site-settings-types";
 
-export function HomeHero() {
+export function HomeHero({ settings }: { settings: SiteSettings }) {
   return (
     <section className="content-grid border-b border-border">
-      <div className="grid min-h-[calc(100vh-4rem)] items-center gap-12 py-16 lg:grid-cols-[1fr_360px] lg:py-20">
+      <div className="grid min-h-[620px] items-center gap-12 py-14 lg:min-h-[calc(78vh-4rem)] lg:grid-cols-[1fr_360px] lg:py-16">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
@@ -21,10 +20,10 @@ export function HomeHero() {
             Obsidian Native Garden
           </Badge>
           <h1 className="max-w-4xl text-5xl font-semibold tracking-tight text-balance sm:text-6xl lg:text-7xl">
-            {siteConfig.slogan}
+            {settings.slogan}
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
-            {siteConfig.description}
+            {settings.description}
           </p>
 
           <form action="/knowledge" className="mt-8 flex max-w-2xl flex-col gap-3 sm:flex-row">
@@ -32,6 +31,7 @@ export function HomeHero() {
               <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 name="q"
+                aria-label="搜索笔记、项目、技术关键词"
                 className="h-12 rounded-full border-border/80 bg-card/60 pl-11"
                 placeholder="搜索笔记、项目、技术关键词..."
               />
@@ -43,7 +43,7 @@ export function HomeHero() {
           </form>
 
           <div className="mt-8 flex flex-wrap gap-2">
-            {siteConfig.skills.map((skill) => (
+            {settings.skills.map((skill) => (
               <Badge key={skill} variant="outline" className="rounded-full font-mono">
                 {skill}
               </Badge>
@@ -59,13 +59,11 @@ export function HomeHero() {
         >
           <div className="absolute -inset-8 rounded-full border border-accent/20 opacity-60" />
           <div className="relative overflow-hidden rounded-lg border border-border bg-card p-4">
-            <Image
-              src={siteConfig.avatar}
-              alt="Avatar"
-              width={320}
-              height={320}
-              priority
-              className="aspect-square w-full rounded-md object-cover"
+            <div
+              aria-label={`${settings.name} avatar`}
+              role="img"
+              className="aspect-square w-full rounded-md bg-muted bg-cover bg-center"
+              style={{ backgroundImage: `url("${settings.avatar}")` }}
             />
             <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
               <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">

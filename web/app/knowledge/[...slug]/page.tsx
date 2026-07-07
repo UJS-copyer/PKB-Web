@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ArrowLeft, Clock3, FileText, Link2 } from "lucide-react";
 import { MarkdownView } from "@/components/markdown/markdown-view";
+import { PendingLink } from "@/components/navigation/route-progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,13 +41,13 @@ export default async function KnowledgeNotePage({ params }: NotePageProps) {
   const { note, content, backlinks, related, linkedNotes, date } = data;
 
   return (
-    <main className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:px-8">
+    <main className="mx-auto grid max-w-[1500px] gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,900px)_280px] lg:px-8 xl:grid-cols-[minmax(0,980px)_300px]">
       <article className="min-w-0">
         <Button asChild variant="ghost" size="sm" className="mb-6">
-          <Link href="/knowledge">
+          <PendingLink href="/knowledge">
             <ArrowLeft className="size-4" />
             Knowledge
-          </Link>
+          </PendingLink>
         </Button>
 
         <header className="mb-8 border-b border-border/80 pb-8">
@@ -115,7 +116,7 @@ export default async function KnowledgeNotePage({ params }: NotePageProps) {
             </CardHeader>
             <CardContent className="space-y-2">
               {backlinks.map((backlink) => (
-                <Link
+                <PendingLink
                   key={backlink.slug}
                   href={backlink.href}
                   prefetch={false}
@@ -123,7 +124,7 @@ export default async function KnowledgeNotePage({ params }: NotePageProps) {
                 >
                   <Link2 className="size-3 text-accent" />
                   {backlink.title}
-                </Link>
+                </PendingLink>
               ))}
               {backlinks.length === 0 ? <p className="text-sm text-muted-foreground">No backlinks yet.</p> : null}
             </CardContent>
@@ -135,17 +136,17 @@ export default async function KnowledgeNotePage({ params }: NotePageProps) {
             </CardHeader>
             <CardContent className="space-y-2">
               {related.map((item) => (
-                <Link
+                <PendingLink
                   key={item.slug}
                   href={item.href}
                   prefetch={false}
                   className="block rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 >
                   {item.title}
-                </Link>
+                </PendingLink>
               ))}
               {linkedNotes.map((link) => (
-                <Link
+                <PendingLink
                   key={link.slug}
                   href={link.href}
                   prefetch={false}
@@ -153,7 +154,7 @@ export default async function KnowledgeNotePage({ params }: NotePageProps) {
                 >
                   <FileText className="size-3 text-accent" />
                   {link.title}
-                </Link>
+                </PendingLink>
               ))}
               {related.length === 0 && linkedNotes.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No related notes yet.</p>

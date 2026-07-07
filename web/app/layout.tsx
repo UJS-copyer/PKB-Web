@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SiteChrome } from "@/components/site/site-chrome";
-import { siteConfig } from "@/lib/site-config";
+import { getSiteSettings } from "@/lib/site-settings";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,31 +15,64 @@ const geistMono = Geist_Mono({
   subsets: ["latin"]
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: siteConfig.title,
-    template: `%s | ${siteConfig.name}`
-  },
-  description: siteConfig.description,
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://pkb-web-online.vercel.app")
-};
+function metadataBase() {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://pkb-web-online.vercel.app");
+  } catch {
+    return new URL("https://pkb-web-online.vercel.app");
+  }
+}
 
-export const viewport: Viewport = {
-  themeColor: "#050505",
-  colorScheme: "dark light"
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings();
 
-export default function RootLayout({
+  return {
+    title: {
+      default: settings.title,
+      template: `%s | ${settings.name}`
+    },
+    description: settings.description,
+    metadataBase: metadataBase()
+  };
+}
+
+export async function generateViewport(): Promise<Viewport> {
+  const settings = await getSiteSettings();
+
+  return {
+    themeColor: settings.themeColor,
+    colorScheme: "dark light"
+  };
+}
+
+function themeStyle(themeColor: string): React.CSSProperties {
+  return {
+    "--accent": themeColor,
+    "--ring": themeColor
+  } as React.CSSProperties;
+}
+
+export default async function RootLayout({
   children
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const settings = await getSiteSettings();
+
   return (
     <html lang="zh-CN" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} min-h-screen overflow-x-hidden`}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} min-h-screen overflow-x-hidden`}
+        style={themeStyle(settings.themeColor)}
+      >
+        <ThemeProvider
+          attribute="class"
+          defaultTheme={settings.darkMode ? "dark" : "light"}
+          enableSystem
+          disableTransitionOnChange
+        >
           <div className="noise-overlay" />
-          <SiteChrome>{children}</SiteChrome>
+          <SiteChrome settings={settings}>{children}</SiteChrome>
         </ThemeProvider>
       </body>
     </html>

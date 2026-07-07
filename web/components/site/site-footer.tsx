@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { siteConfig } from "@/lib/site-config";
+import type { SiteSettings } from "@/lib/site-settings-types";
 
-export function SiteFooter() {
+export function SiteFooter({ settings }: { settings: SiteSettings }) {
   return (
     <footer className="border-t border-border">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:grid-cols-[1fr_auto] lg:px-8">
@@ -13,11 +13,11 @@ export function SiteFooter() {
             Digital Garden
           </p>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-            {siteConfig.description}
+            {settings.description}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-4 md:justify-end">
-          {siteConfig.socials.map((item) => (
+          {settings.socials.map((item) => (
             <Link
               key={item.label}
               href={item.href}

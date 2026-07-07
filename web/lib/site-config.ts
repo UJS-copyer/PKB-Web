@@ -17,20 +17,20 @@ export const siteConfig = {
   description:
     "一个由 Obsidian 驱动的个人数字花园，沉淀研究、工程、项目和长期思考。",
   avatar: "/avatar.svg",
-  email: "hello@example.com",
-  github: "https://github.com/",
+  email: "3129086013@qq.com",
+  github: "https://github.com/UJS-copyer",
   nav: [
     { href: "/", label: "Home", icon: Home },
     { href: "/knowledge", label: "Knowledge", icon: LibraryBig },
     { href: "/blog", label: "Blog", icon: FileText },
     { href: "/projects", label: "Projects", icon: BriefcaseBusiness },
     { href: "/ai", label: "AI", icon: Bot },
-    { href: "/about", label: "About", icon: UserRound },
+    { href: "/#about", label: "About", icon: UserRound },
     { href: "/admin", label: "Admin", icon: Settings }
   ],
   socials: [
-    { href: "https://github.com/", label: "GitHub", icon: Github },
-    { href: "mailto:hello@example.com", label: "Email", icon: Mail }
+    { href: "https://github.com/UJS-copyer", label: "GitHub", icon: Github },
+    { href: "mailto:3129086013@qq.com", label: "Email", icon: Mail }
   ],
   skills: [
     "Next.js",

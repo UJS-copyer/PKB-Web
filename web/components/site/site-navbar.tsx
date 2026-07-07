@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, Search } from "lucide-react";
+import { PendingLink } from "@/components/navigation/route-progress";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -13,12 +14,13 @@ import {
   SheetTrigger
 } from "@/components/ui/sheet";
 import { siteConfig } from "@/lib/site-config";
+import type { SiteSettings } from "@/lib/site-settings-types";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./theme-toggle";
 
-export function SiteNavbar() {
+export function SiteNavbar({ settings }: { settings: SiteSettings }) {
   const pathname = usePathname();
-  const publicNav = siteConfig.nav.filter((item) => item.href !== "/admin");
+  const publicNav = siteConfig.nav.filter((item) => item.href !== "/admin" && item.href !== "/about");
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/82 backdrop-blur-xl">
@@ -26,7 +28,7 @@ export function SiteNavbar() {
         <Link href="/" className="group flex min-w-0 items-center gap-3">
           <span className="size-2 rounded-full bg-accent transition-transform group-hover:scale-150" />
           <span className="font-mono text-xs uppercase tracking-[0.24em] text-muted-foreground">
-            {siteConfig.name}
+            {settings.name}
           </span>
         </Link>
 
@@ -57,10 +59,10 @@ export function SiteNavbar() {
 
         <div className="hidden items-center gap-2 lg:flex">
           <Button asChild variant="outline" size="sm" className="rounded-full font-mono text-xs">
-            <Link href="/knowledge">
+            <PendingLink href="/knowledge">
               <Search className="size-3.5" />
               Search
-            </Link>
+            </PendingLink>
           </Button>
           <ThemeToggle />
         </div>
@@ -75,7 +77,7 @@ export function SiteNavbar() {
             </SheetTrigger>
             <SheetContent>
               <SheetHeader>
-                <SheetTitle>{siteConfig.title}</SheetTitle>
+                <SheetTitle>{settings.title}</SheetTitle>
               </SheetHeader>
               <div className="mt-8 grid gap-2">
                 {publicNav.map((item, index) => {

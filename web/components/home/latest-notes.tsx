@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Reveal } from "@/components/motion/reveal";
+import { PendingLink } from "@/components/navigation/route-progress";
 import { formatNoteDate } from "@/lib/content/source";
 import type { NoteMeta } from "@/lib/content/vault";
 
@@ -28,9 +29,10 @@ export function LatestNotes({ notes }: { notes: NoteMeta[] }) {
             const date = formatNoteDate(note);
             return (
               <Reveal key={note.slug} delay={index * 0.035}>
-                <Link
+                <PendingLink
                   href={note.href}
                   prefetch={false}
+                  pendingClassName="border-accent/60 bg-muted/40"
                   className="group grid gap-4 rounded-lg border border-border bg-card/40 p-5 transition-colors hover:bg-muted/40 md:grid-cols-[1fr_auto]"
                 >
                   <div>
@@ -53,7 +55,7 @@ export function LatestNotes({ notes }: { notes: NoteMeta[] }) {
                     <span>{note.readingMinutes} min</span>
                     <ArrowUpRight className="size-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                   </div>
-                </Link>
+                </PendingLink>
               </Reveal>
             );
           })}
