@@ -16,7 +16,8 @@ const sourceToDatabase = {
   manual: "manual",
   webhook: "webhook",
   "publish-writeback": "publish_writeback",
-  "cron-retry": "cron_retry"
+  "cron-retry": "cron_retry",
+  "embedding-rebuild": "embedding_rebuild"
 } as const;
 
 function now() {
@@ -92,6 +93,7 @@ function toRepositoryConfig(row: {
 function sourceFromDatabase(source: string): SyncJob["source"] {
   if (source === "publish_writeback") return "publish-writeback";
   if (source === "cron_retry") return "cron-retry";
+  if (source === "embedding_rebuild") return "embedding-rebuild";
   return source as SyncJob["source"];
 }
 

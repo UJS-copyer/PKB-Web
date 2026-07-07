@@ -35,6 +35,8 @@ coverage/
 **/.vercel/
 .turbo/
 **/.turbo/
+web/docs/pkb_knowledge_api_key.txt
+web/docs/默认业务空间-apiKey-6028192.csv
 
 # private content source
 obsidian/

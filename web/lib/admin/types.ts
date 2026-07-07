@@ -1,6 +1,6 @@
 export type RepositoryProvider = "gitee";
 export type SyncMode = "manual" | "auto";
-export type SyncJobSource = "manual" | "webhook" | "publish-writeback" | "cron-retry";
+export type SyncJobSource = "manual" | "webhook" | "publish-writeback" | "cron-retry" | "embedding-rebuild";
 export type SyncJobStatus = "pending" | "running" | "success" | "failed" | "ignored";
 
 export type RepositoryConfig = {

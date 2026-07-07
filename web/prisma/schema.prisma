@@ -22,6 +22,7 @@ enum SyncJobSource {
   webhook
   publish_writeback
   cron_retry
+  embedding_rebuild
 }
 
 enum SyncJobStatus {
@@ -189,6 +190,7 @@ model AiConfig {
   provider        String   @default("openai")
   chatModel       String   @default("gpt-4o-mini")
   embeddingModel  String   @default("text-embedding-3-small")
+  embeddingDimensions Int?
   chunkSize       Int      @default(900)
   overlap         Int      @default(120)
   topK            Int      @default(6)

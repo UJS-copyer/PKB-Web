@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -44,6 +45,17 @@ export function RouteProgressProvider({ children }: { children: React.ReactNode 
           visible ? "scale-x-100" : "scale-x-0"
         )}
       />
+      <div
+        aria-live="polite"
+        aria-atomic="true"
+        className={cn(
+          "pointer-events-none fixed right-4 top-4 z-[69] flex items-center gap-2 rounded-full border border-border/80 bg-background/92 px-3 py-1.5 text-xs text-muted-foreground shadow-sm backdrop-blur transition-all duration-200 sm:right-6",
+          visible ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0"
+        )}
+      >
+        <Loader2 className="size-3.5 animate-spin text-accent" />
+        <span>加载中...</span>
+      </div>
       {children}
     </RouteProgressContext.Provider>
   );

@@ -14,5 +14,5 @@ export function getQdrantClient() {
 }
 
 export function qdrantCollection() {
-  return process.env.QDRANT_COLLECTION ?? "pkb_knowledge";
+  return process.env.QDRANT_COLLECTION ?? "pkb_knowledge_v1";
 }

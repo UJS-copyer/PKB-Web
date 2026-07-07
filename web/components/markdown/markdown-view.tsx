@@ -6,7 +6,7 @@ import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import { MermaidBlock } from "@/components/markdown/mermaid-block";
-import { idFromHeading } from "@/lib/content/vault";
+import { idFromHeading } from "@/lib/content/heading-id";
 
 function textFromChildren(children: React.ReactNode): string {
   if (typeof children === "string") return children;

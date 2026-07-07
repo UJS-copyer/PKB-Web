@@ -3,6 +3,7 @@ import "server-only";
 import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
+import { idFromHeading } from "./heading-id";
 
 const markdownExtension = ".md";
 export const assetExtensions = new Set([
@@ -184,16 +185,6 @@ export function decodeRouteSegments(slugSegments: string[]) {
       return segment;
     }
   });
-}
-
-export function idFromHeading(text: string) {
-  return encodeURIComponent(
-    text
-      .trim()
-      .toLowerCase()
-      .replace(/[^\p{Letter}\p{Number}\s-]/gu, "")
-      .replace(/\s+/g, "-")
-  );
 }
 
 function extractHeadings(content: string) {

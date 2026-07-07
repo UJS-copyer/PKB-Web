@@ -6,6 +6,7 @@ import { Prisma } from "@prisma/client";
 import { assetExtensions, parseNoteFromRaw, populateBacklinks, type Note } from "@/lib/content/vault";
 import { databaseConfigured, prisma } from "@/lib/db/prisma";
 import type { GiteeTreeItem } from "@/lib/gitee/client";
+import type { EmbeddingNoteChange } from "@/lib/rag/embeddings";
 
 const ignoredSegments = new Set([".git", ".obsidian", "node_modules"]);
 
@@ -21,6 +22,8 @@ export type ContentSyncResult = {
   assetsDeleted: number;
   tagsUpserted: number;
   linksUpserted: number;
+  embeddingNotes: EmbeddingNoteChange[];
+  embeddingDeletedPaths: string[];
 };
 
 export function isIgnoredSourcePath(sourcePath: string) {
@@ -65,22 +68,30 @@ type ExistingNoteSnapshot = {
   sourceUpdatedAt: Date | null;
 };
 
+type ParsedRemoteNote = {
+  note: Note;
+  changed: boolean;
+};
+
 function parseRemoteNotes(markdownFiles: RemoteMarkdownFile[], existingByPath: Map<string, ExistingNoteSnapshot>) {
   const syncedAt = new Date().toISOString();
-  const notes = markdownFiles.map((file) => {
+  const notes: ParsedRemoteNote[] = markdownFiles.map((file) => {
     const existing = existingByPath.get(file.path);
     const unchanged = Boolean(existing?.sha && file.sha && existing.sha === file.sha);
     const previousUpdatedAt = existing?.sourceUpdatedAt?.toISOString() ?? existing?.createdAt.toISOString();
     const updatedAt = unchanged && previousUpdatedAt ? previousUpdatedAt : syncedAt;
 
-    return parseNoteFromRaw({
+    return {
+      changed: !unchanged,
+      note: parseNoteFromRaw({
       relativePath: file.path,
       raw: file.content,
       createdAt: existing?.createdAt.toISOString(),
       updatedAt
-    });
+      })
+    };
   });
-  populateBacklinks(notes);
+  populateBacklinks(notes.map((item) => item.note));
   return notes;
 }
 
@@ -125,7 +136,7 @@ async function upsertNote(note: Note, file: RemoteMarkdownFile) {
     sourceUpdatedAt: asDate(note.updatedAt)
   };
 
-  await prisma.note.upsert({
+  return prisma.note.upsert({
     where: { sourcePath: note.relativePath },
     create: {
       sourcePath: note.relativePath,
@@ -196,7 +207,9 @@ export async function syncContentToDatabase(input: {
       assetsUpserted: 0,
       assetsDeleted: 0,
       tagsUpserted: 0,
-      linksUpserted: 0
+      linksUpserted: 0,
+      embeddingNotes: [],
+      embeddingDeletedPaths: []
     };
   }
 
@@ -213,15 +226,32 @@ export async function syncContentToDatabase(input: {
         })
       : [];
   const existingByPath = new Map(existingRows.map((note) => [note.sourcePath, note]));
-  const notes = parseRemoteNotes(input.markdownFiles, existingByPath);
+  const parsedNotes = parseRemoteNotes(input.markdownFiles, existingByPath);
+  const notes = parsedNotes.map((item) => item.note);
   const noteByPath = new Map(input.markdownFiles.map((file) => [file.path, file]));
-  const linkCounts = await mapWithConcurrency(notes, 4, async (note) => {
+  const syncResults = await mapWithConcurrency(parsedNotes, 4, async ({ note, changed }) => {
     const file = noteByPath.get(note.relativePath);
-    if (!file) return 0;
-    await upsertNote(note, file);
-    return refreshLinks(note);
+    if (!file) {
+      return { links: 0, embeddingNote: undefined };
+    }
+
+    const upserted = await upsertNote(note, file);
+    return {
+      links: await refreshLinks(note),
+      embeddingNote: changed
+        ? ({
+            id: upserted.id,
+            sourcePath: upserted.sourcePath,
+            slug: upserted.slug,
+            title: upserted.title,
+            content: upserted.content,
+            excerpt: upserted.excerpt
+          } satisfies EmbeddingNoteChange)
+        : undefined
+    };
   });
-  const linksUpserted = linkCounts.reduce((sum, count) => sum + count, 0);
+  const linksUpserted = syncResults.reduce((sum, result) => sum + result.links, 0);
+  const embeddingNotes = syncResults.flatMap((result) => (result.embeddingNote ? [result.embeddingNote] : []));
 
   const tagsUpserted = await upsertTags(notes);
 
@@ -229,18 +259,27 @@ export async function syncContentToDatabase(input: {
 
   const notePaths = notes.map((note) => note.relativePath);
   const assetPaths = input.assetFiles.map((file) => file.path);
-  const notesDeleted =
-    input.fullSync && notePaths.length > 0
-      ? (
-          await prisma.note.updateMany({
-            where: {
-              sourcePath: { notIn: notePaths },
-              status: "active"
-            },
-            data: { status: "deleted" }
-          })
-        ).count
-      : 0;
+  const deletedNotes =
+    input.fullSync
+      ? await prisma.note.findMany({
+          where: {
+            sourcePath: { notIn: notePaths },
+            status: "active"
+          },
+          select: { sourcePath: true }
+        })
+      : [];
+  const notesDeleted = deletedNotes.length
+    ? (
+        await prisma.note.updateMany({
+          where: {
+            sourcePath: { in: deletedNotes.map((note) => note.sourcePath) },
+            status: "active"
+          },
+          data: { status: "deleted" }
+        })
+      ).count
+    : 0;
   const assetsDeleted =
     input.fullSync && assetPaths.length > 0
       ? (
@@ -261,6 +300,8 @@ export async function syncContentToDatabase(input: {
     assetsUpserted: input.assetFiles.length,
     assetsDeleted,
     tagsUpserted,
-    linksUpserted
+    linksUpserted,
+    embeddingNotes,
+    embeddingDeletedPaths: deletedNotes.map((note) => note.sourcePath)
   };
 }

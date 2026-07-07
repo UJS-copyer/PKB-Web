@@ -2,12 +2,12 @@ import "server-only";
 
 import {
   assetUrl as vaultAssetUrl,
-  idFromHeading,
   resolveAsset as resolveVaultAsset,
   resolveWikiLink as resolveVaultWikiLink,
   type AssetRecord,
   type Note
 } from "./vault";
+import { idFromHeading } from "./heading-id";
 
 export type MarkdownContext = {
   resolveWikiLink?: (target: string) => Pick<Note, "href" | "title"> | null;

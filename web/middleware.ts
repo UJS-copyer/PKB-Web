@@ -25,8 +25,9 @@ export default auth((request) => {
     return NextResponse.json({ ok: false, error: "Administrator access required." }, { status: request.auth ? 403 : 401 });
   }
 
-  const signInUrl = new URL("/api/auth/signin", request.url);
-  signInUrl.searchParams.set("callbackUrl", request.nextUrl.href);
+  const signInUrl = new URL("/login", request.url);
+  const callbackUrl = `${request.nextUrl.pathname}${request.nextUrl.search}`;
+  signInUrl.searchParams.set("callbackUrl", callbackUrl);
   return NextResponse.redirect(signInUrl);
 });
 

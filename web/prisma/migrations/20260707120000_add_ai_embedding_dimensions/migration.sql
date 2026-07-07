@@ -1,0 +1,1 @@
+ALTER TABLE "AiConfig" ADD COLUMN IF NOT EXISTS "embeddingDimensions" INTEGER;

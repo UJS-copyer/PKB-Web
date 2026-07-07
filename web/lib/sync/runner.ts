@@ -17,6 +17,8 @@ import {
   updateSyncJob
 } from "@/lib/admin/state-store";
 import type { SyncJobSource } from "@/lib/admin/types";
+import { deleteEmbeddingsForPaths, syncEmbeddingsForNotes } from "@/lib/rag/embeddings";
+import { runEmbeddingJob } from "@/lib/rag/job-runner";
 
 type LocalVaultSnapshot = {
   notes: number;
@@ -112,6 +114,14 @@ export async function runSyncJob(jobId: string) {
       fullSync
     });
 
+    if (contentSummary.embeddingDeletedPaths.length > 0) {
+      await deleteEmbeddingsForPaths(contentSummary.embeddingDeletedPaths);
+    }
+
+    if (contentSummary.embeddingNotes.length > 0) {
+      await syncEmbeddingsForNotes(contentSummary.embeddingNotes);
+    }
+
     await appendSyncLog({
       jobId,
       level: "info",
@@ -122,6 +132,19 @@ export async function runSyncJob(jobId: string) {
           : "Database sync skipped because DATABASE_URL is not configured.",
       meta: contentSummary
     });
+
+    if (contentSummary.embeddingDeletedPaths.length > 0 || contentSummary.embeddingNotes.length > 0) {
+      await appendSyncLog({
+        jobId,
+        level: "info",
+        step: "embedding",
+        message: `Incremental embeddings processed: ${contentSummary.embeddingNotes.length} updated notes, ${contentSummary.embeddingDeletedPaths.length} deleted notes.`,
+        meta: {
+          updated: contentSummary.embeddingNotes.length,
+          deleted: contentSummary.embeddingDeletedPaths.length
+        }
+      });
+    }
 
     await saveRepositoryConfig({
       ...config,
@@ -135,6 +158,10 @@ export async function runSyncJob(jobId: string) {
       assetCount: assetFiles.length,
       mode: contentSummary.mode,
       database: contentSummary,
+      embedding: {
+        updatedNotes: contentSummary.embeddingNotes.length,
+        deletedNotes: contentSummary.embeddingDeletedPaths.length
+      },
       nextSteps: ["supabase-storage-upload", "pgvector-embedding", "search-index-refresh"]
     };
 
@@ -172,9 +199,29 @@ export async function processPendingJobs(limit = 2) {
   const state = await readAdminState();
   const pending = state.jobs.filter((job) => job.status === "pending").slice(0, limit);
   for (const job of pending) {
+    if (job.source === "embedding-rebuild") {
+      await runEmbeddingJob(job.id);
+      continue;
+    }
     await runSyncJob(job.id);
   }
   return pending.length;
+}
+
+export async function processJob(jobId: string) {
+  const state = await readAdminState();
+  const job = state.jobs.find((item) => item.id === jobId);
+  if (!job || job.status !== "pending") {
+    return false;
+  }
+
+  if (job.source === "embedding-rebuild") {
+    await runEmbeddingJob(job.id);
+    return true;
+  }
+
+  await runSyncJob(job.id);
+  return true;
 }
 
 export function getLocalVaultSnapshot() {
