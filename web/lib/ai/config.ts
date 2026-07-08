@@ -29,6 +29,12 @@ export type AiConfigStatus = {
   warnings: string[];
 };
 
+export function supportsTemperature(model: string) {
+  const normalized = model.trim().toLowerCase();
+  if (!normalized) return true;
+  return !/^gpt-5(?:[.-]|$)/.test(normalized) && !/^o[134](?:[.-]|$)/.test(normalized);
+}
+
 type AiConfigLike = {
   provider?: string | null;
   chatModel?: string | null;
@@ -146,6 +152,10 @@ function buildAiWarnings() {
 
   if (process.env.EMBEDDING_BASE_URL && !process.env.EMBEDDING_API_KEY && !process.env.OPENAI_API_KEY) {
     warnings.push("已填写 Embedding 中转地址，但缺少可用 API Key。");
+  }
+
+  if (!supportsTemperature(process.env.OPENAI_CHAT_MODEL?.trim() || defaultAiConfig.chatModel)) {
+    warnings.push("当前聊天模型属于推理模型，temperature 参数不会生效，系统会自动忽略该参数。");
   }
 
   return warnings;

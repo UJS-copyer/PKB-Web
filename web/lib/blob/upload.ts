@@ -43,7 +43,7 @@ function ensureBlobConfig() {
   }
 
   throw new Error(
-    "Vercel Blob is not configured. Set BLOB_STORE_ID in Vercel, or BLOB_READ_WRITE_TOKEN for local development."
+    "Vercel Blob 未配置。线上请确认项目已连接 Blob Store，本地开发请配置 BLOB_READ_WRITE_TOKEN。"
   );
 }
 
@@ -56,19 +56,23 @@ function normalizeBlobUploadError(error: unknown) {
     );
   }
 
+  if (/request entity too large|payload too large|request body too large/i.test(message)) {
+    return new Error("上传文件过大，请压缩后再试。");
+  }
+
   return error instanceof Error ? error : new Error(message);
 }
 
 export async function uploadToBlob(file: File, purpose: UploadPurpose) {
   const config = purposeConfig[purpose];
   if (!config) {
-    throw new Error("Unsupported upload purpose.");
+    throw new Error("不支持的上传用途。");
   }
   if (!config.types.includes(file.type)) {
-    throw new Error("Unsupported file type.");
+    throw new Error("文件类型不支持。");
   }
   if (file.size > config.maxSize) {
-    throw new Error("File is too large.");
+    throw new Error("文件过大。");
   }
 
   ensureBlobConfig();

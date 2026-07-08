@@ -21,21 +21,55 @@ function normalizeQuestion(question: string) {
   return question.trim().replace(/\s+/g, " ");
 }
 
-function scoreNote(question: string, text: string) {
-  const terms = Array.from(new Set(question.toLowerCase().split(/\s+/).filter((term) => term.length > 1)));
+function tokenizeQuestion(question: string) {
+  const normalized = normalizeQuestion(question).toLowerCase();
+  const tokens = new Set<string>();
+
+  for (const match of normalized.match(/[a-z0-9][a-z0-9._/-]*/g) ?? []) {
+    if (match.length > 1) tokens.add(match);
+  }
+
+  for (const segment of normalized.match(/[\u4e00-\u9fff]{2,}/g) ?? []) {
+    if (segment.length <= 6) {
+      tokens.add(segment);
+    }
+    for (let size = 2; size <= Math.min(4, segment.length); size += 1) {
+      for (let index = 0; index <= segment.length - size; index += 1) {
+        tokens.add(segment.slice(index, index + size));
+      }
+    }
+  }
+
+  return Array.from(tokens).slice(0, 80);
+}
+
+function scoreText(tokens: string[], text: string) {
   const haystack = text.toLowerCase();
-  return terms.reduce((score, term) => score + (haystack.includes(term) ? 1 : 0), 0);
+  return tokens.reduce((score, token) => {
+    if (!token) return score;
+    if (haystack === token) return score + 6;
+    if (haystack.startsWith(token) || haystack.endsWith(token)) return score + 4;
+    if (haystack.includes(token)) return score + Math.max(2, token.length >= 4 ? 4 : 2);
+    return score;
+  }, 0);
 }
 
 async function retrieveLocalSources(question: string, limit = 5): Promise<RetrievedSource[]> {
   const notes = await getAllNotes();
+  const tokens = tokenizeQuestion(question);
   return notes
-    .map((note) => ({
-      note,
-      score: scoreNote(question, `${note.title}\n${note.excerpt}\n${note.tags.join(" ")}`)
-    }))
+    .map((note) => {
+      const titleScore = scoreText(tokens, `${note.title}\n${note.aliases.join(" ")}\n${note.slug}`);
+      const pathScore = scoreText(tokens, note.relativePath);
+      const tagScore = scoreText(tokens, note.tags.join(" "));
+      const excerptScore = scoreText(tokens, note.excerpt);
+      return {
+        note,
+        score: titleScore * 5 + pathScore * 3 + tagScore * 2 + excerptScore
+      };
+    })
     .filter((item) => item.score > 0)
-    .sort((a, b) => b.score - a.score)
+    .sort((a, b) => b.score - a.score || a.note.title.localeCompare(b.note.title, "zh-CN"))
     .slice(0, limit)
     .map(({ note, score }) => ({
       title: note.title,
@@ -103,16 +137,48 @@ async function retrieveVectorSources(question: string, limit: number): Promise<R
     if (current && current.score >= score) continue;
 
     const slug = typeof payload.slug === "string" ? payload.slug : "";
+    const excerpt =
+      typeof payload.excerpt === "string" && payload.excerpt.trim()
+        ? payload.excerpt
+        : typeof payload.content === "string"
+          ? payload.content.slice(0, 260)
+          : "";
     deduped.set(path, {
       title: typeof payload.title === "string" ? payload.title : path,
       path,
       url: slug ? `/knowledge/${slug.split("/").map(encodeURIComponent).join("/")}` : "#",
-      excerpt: typeof payload.excerpt === "string" ? payload.excerpt : "",
+      excerpt,
       score
     });
   }
 
   return Array.from(deduped.values()).sort((a, b) => b.score - a.score).slice(0, limit);
+}
+
+function mergeRetrievedSources(localSources: RetrievedSource[], vectorSources: RetrievedSource[], limit: number) {
+  const merged = new Map<string, RetrievedSource>();
+
+  for (const source of localSources) {
+    merged.set(source.path, {
+      ...source,
+      score: source.score + 100
+    });
+  }
+
+  for (const source of vectorSources) {
+    const current = merged.get(source.path);
+    const boosted = {
+      ...source,
+      score: source.score * 10
+    };
+    if (!current || boosted.score > current.score) {
+      merged.set(source.path, boosted);
+    }
+  }
+
+  return Array.from(merged.values())
+    .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title, "zh-CN"))
+    .slice(0, limit);
 }
 
 export async function retrieveSources(question: string, limit?: number): Promise<RetrievedSource[]> {
@@ -122,9 +188,10 @@ export async function retrieveSources(question: string, limit?: number): Promise
   if (!normalizedQuestion) return [];
 
   return getRuntimeCached(`rag:sources:${topK}:${normalizedQuestion.toLowerCase()}`, retrievalCacheTtlMs, async () => {
+    const localSources = await retrieveLocalSources(normalizedQuestion, topK);
     const vectorSources = await retrieveVectorSources(normalizedQuestion, topK);
-    if (vectorSources.length > 0) return vectorSources;
-    return retrieveLocalSources(normalizedQuestion, topK);
+    if (vectorSources.length === 0) return localSources;
+    return mergeRetrievedSources(localSources, vectorSources, topK);
   });
 }
 

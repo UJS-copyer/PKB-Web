@@ -4,7 +4,7 @@ import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { getAiConfig, getAiConfigStatus } from "@/lib/ai/config";
+import { getAiConfig, getAiConfigStatus, supportsTemperature } from "@/lib/ai/config";
 import { getEmbeddingJobState } from "@/lib/rag/job-runner";
 
 export const metadata: Metadata = {
@@ -115,6 +115,11 @@ export default async function AdminAiConfigPage() {
               <label className="grid gap-2 text-sm">
                 <span className="text-muted-foreground">Temperature</span>
                 <Input name="temperature" type="number" step="0.1" defaultValue={String(config.temperature)} />
+                {!supportsTemperature(config.chatModel) ? (
+                  <span className="text-xs text-amber-600 dark:text-amber-400">
+                    当前模型属于推理模型，temperature 参数会被自动忽略。
+                  </span>
+                ) : null}
               </label>
               <label className="grid gap-2 text-sm md:col-span-2">
                 <span className="text-muted-foreground">系统 Prompt</span>

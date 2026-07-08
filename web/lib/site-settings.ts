@@ -130,7 +130,7 @@ export const defaultSiteSettings: Omit<SiteSettings, "socials"> = {
   education: "教育经历、阶段成果和长期学习方向可在后台 Settings 中维护。",
   research: "扩散模型、图像修复、古文字图像处理、跨模态方法。",
   skills: siteConfig.skills,
-  resumeUrl: "/resume.pdf",
+  resumeUrl: undefined,
   logo: undefined,
   avatar: siteConfig.avatar,
   github: siteConfig.github,

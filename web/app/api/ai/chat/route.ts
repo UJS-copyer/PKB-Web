@@ -1,6 +1,6 @@
 import { createOpenAI } from "@ai-sdk/openai";
 import { streamText } from "ai";
-import { getAiConfig, getChatProviderConfig } from "@/lib/ai/config";
+import { getAiConfig, getChatProviderConfig, supportsTemperature } from "@/lib/ai/config";
 import { buildRagPrompt, retrieveSources } from "@/lib/rag/retrieval";
 
 const CHAT_WINDOW_MS = 10 * 60 * 1000;
@@ -89,8 +89,7 @@ export async function POST(request: Request) {
 
     const config = await getAiConfig();
     const context = buildConversationContext(messages);
-    const retrievalQuery = [context, question].filter(Boolean).join("\n\n当前问题：");
-    const sources = await retrieveSources(retrievalQuery || question, config.topK);
+    const sources = await retrieveSources(question, config.topK);
     const chatProvider = getChatProviderConfig();
 
     if (chatProvider.apiKey) {
@@ -101,7 +100,9 @@ export async function POST(request: Request) {
 
       const result = streamText({
         model: provider(config.chatModel || chatProvider.model || "gpt-4o-mini"),
-        temperature: config.temperature,
+        ...(supportsTemperature(config.chatModel || chatProvider.model || "gpt-4o-mini")
+          ? { temperature: config.temperature }
+          : {}),
         prompt: buildRagPrompt(
           context ? `对话上下文：\n${context}\n\n当前问题：\n${question}` : question,
           sources,

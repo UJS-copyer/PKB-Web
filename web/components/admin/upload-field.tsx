@@ -13,6 +13,37 @@ type UploadFieldProps = {
   accept: string;
 };
 
+const uploadLimits: Record<UploadFieldProps["purpose"], { maxSize: number; types: string[]; sizeLabel: string }> = {
+  avatar: {
+    maxSize: 2 * 1024 * 1024,
+    types: ["image/png", "image/jpeg", "image/webp"],
+    sizeLabel: "2MB"
+  },
+  resume: {
+    maxSize: 4 * 1024 * 1024,
+    types: ["application/pdf"],
+    sizeLabel: "4MB"
+  },
+  "project-cover": {
+    maxSize: 4 * 1024 * 1024,
+    types: ["image/png", "image/jpeg", "image/webp"],
+    sizeLabel: "4MB"
+  }
+};
+
+function normalizeUploadErrorMessage(message: string) {
+  if (/request entity too large|request body too large|payload too large/i.test(message)) {
+    return "上传文件过大，请压缩后重试。";
+  }
+  if (/not valid json|unexpected token/i.test(message)) {
+    return "上传接口返回了异常响应，请稍后重试。";
+  }
+  if (/request ent/i.test(message)) {
+    return "上传请求被服务端拒绝，请稍后重试。";
+  }
+  return message;
+}
+
 export function UploadField({ name, label, defaultValue, purpose, accept }: UploadFieldProps) {
   const [value, setValue] = useState(defaultValue ?? "");
   const [uploading, setUploading] = useState(false);
@@ -24,6 +55,16 @@ export function UploadField({ name, label, defaultValue, purpose, accept }: Uplo
 
   async function upload(file?: File) {
     if (!file) return;
+    const limit = uploadLimits[purpose];
+    if (!limit.types.includes(file.type)) {
+      setMessage("文件类型不支持。");
+      return;
+    }
+    if (file.size > limit.maxSize) {
+      setMessage(`文件大小不能超过 ${limit.sizeLabel}。`);
+      return;
+    }
+
     setUploading(true);
     setMessage(null);
     try {
@@ -34,14 +75,20 @@ export function UploadField({ name, label, defaultValue, purpose, accept }: Uplo
         method: "POST",
         body
       });
-      const payload = (await response.json()) as { ok?: boolean; url?: string; error?: string };
-      if (!response.ok || !payload.ok || !payload.url) {
-        throw new Error(payload.error ?? "上传失败。");
+      const raw = await response.text();
+      let payload: { ok?: boolean; url?: string; error?: string } | null = null;
+      try {
+        payload = raw ? (JSON.parse(raw) as { ok?: boolean; url?: string; error?: string }) : null;
+      } catch {
+        payload = null;
+      }
+      if (!response.ok || !payload?.ok || !payload.url) {
+        throw new Error(normalizeUploadErrorMessage(payload?.error ?? raw?.trim() ?? "上传失败。"));
       }
       setValue(payload.url);
       setMessage("上传成功，保存表单后生效。");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "上传失败。");
+      setMessage(normalizeUploadErrorMessage(error instanceof Error ? error.message : "上传失败。"));
     } finally {
       setUploading(false);
     }
@@ -66,6 +113,11 @@ export function UploadField({ name, label, defaultValue, purpose, accept }: Uplo
           </span>
         </Button>
       </div>
+      {value ? (
+        <a href={value} target="_blank" rel="noreferrer" className="text-xs text-accent underline-offset-4 hover:underline">
+          打开当前文件
+        </a>
+      ) : null}
       {message ? <span className="text-xs text-muted-foreground">{message}</span> : null}
     </label>
   );
