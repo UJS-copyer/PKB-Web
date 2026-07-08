@@ -38,13 +38,25 @@ function ensureBlobConfig() {
     return;
   }
 
-  if (process.env.BLOB_STORE_ID?.trim() && process.env.VERCEL_OIDC_TOKEN?.trim()) {
+  if (process.env.BLOB_STORE_ID?.trim()) {
     return;
   }
 
   throw new Error(
-    "Vercel Blob is not configured. For local development, set BLOB_READ_WRITE_TOKEN. In Vercel, connect the Blob store so BLOB_STORE_ID and OIDC are available."
+    "Vercel Blob is not configured. Set BLOB_STORE_ID in Vercel, or BLOB_READ_WRITE_TOKEN for local development."
   );
+}
+
+function normalizeBlobUploadError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+
+  if (message.includes('OIDC is enabled for this project, but not for the "development" environment')) {
+    return new Error(
+      "Vercel Blob 当前只对 Production/Preview 启用了 OIDC。线上部署可以直接上传；本地开发请配置 BLOB_READ_WRITE_TOKEN，或在 Blob Store 项目连接中为 Development 启用当前项目。"
+    );
+  }
+
+  return error instanceof Error ? error : new Error(message);
 }
 
 export async function uploadToBlob(file: File, purpose: UploadPurpose) {
@@ -63,11 +75,17 @@ export async function uploadToBlob(file: File, purpose: UploadPurpose) {
 
   const ext = safeExtension(file.name, file.type);
   const pathname = `${config.prefix}/${Date.now()}-${crypto.randomUUID()}${ext}`;
-  const blob = await put(pathname, file, {
-    access: "public",
-    contentType: file.type,
-    addRandomSuffix: false
-  });
+  let blob;
+
+  try {
+    blob = await put(pathname, file, {
+      access: "public",
+      contentType: file.type,
+      addRandomSuffix: false
+    });
+  } catch (error) {
+    throw normalizeBlobUploadError(error);
+  }
 
   return {
     key: pathname,

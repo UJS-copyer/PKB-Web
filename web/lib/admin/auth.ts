@@ -14,12 +14,22 @@ export class AdminAuthError extends Error {
   }
 }
 
+function githubAuthConfigured() {
+  return Boolean(process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET);
+}
+
 export async function isAdminSession() {
+  if (process.env.NODE_ENV === "development" && !githubAuthConfigured()) {
+    return true;
+  }
   const session = await auth();
   return isAdminEmail(session?.user?.email);
 }
 
 export async function requireAdmin() {
+  if (process.env.NODE_ENV === "development" && !githubAuthConfigured()) {
+    return { user: { email: "dev@local" } };
+  }
   const session = await auth();
   if (!session?.user?.email) {
     throw new AdminAuthError(401, "Authentication required.");
