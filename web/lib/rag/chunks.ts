@@ -47,26 +47,31 @@ function contentHash(value: string) {
 function chunkText(text: string, chunkSize: number, overlap: number) {
   if (text.length <= chunkSize) return [text];
 
+  const paragraphs = text.split(/\n{2,}/).map((part) => part.trim()).filter(Boolean);
+  if (paragraphs.length === 0) return [text];
+
   const chunks: string[] = [];
-  let start = 0;
+  let current = "";
+  let overlapSeed = "";
 
-  while (start < text.length) {
-    const maxEnd = Math.min(start + chunkSize, text.length);
-    let end = text.lastIndexOf("\n\n", maxEnd);
-    if (end <= start + Math.floor(chunkSize * 0.5)) {
-      end = text.lastIndexOf(". ", maxEnd);
-    }
-    if (end <= start + Math.floor(chunkSize * 0.5)) {
-      end = text.lastIndexOf("。", maxEnd);
-    }
-    if (end <= start) {
-      end = maxEnd;
+  for (const paragraph of paragraphs) {
+    const next = current ? `${current}\n\n${paragraph}` : paragraph;
+    if (next.length <= chunkSize) {
+      current = next;
+      continue;
     }
 
-    const slice = text.slice(start, end).trim();
-    if (slice) chunks.push(slice);
-    if (end >= text.length) break;
-    start = Math.max(end - overlap, start + 1);
+    if (current) {
+      chunks.push(current);
+    }
+
+    const overlapText = overlapSeed ? `${overlapSeed}\n\n${paragraph}` : paragraph;
+    current = overlapText.length <= chunkSize ? overlapText : paragraph;
+    overlapSeed = current.slice(Math.max(0, current.length - overlap)).trim();
+  }
+
+  if (current) {
+    chunks.push(current);
   }
 
   return chunks;
