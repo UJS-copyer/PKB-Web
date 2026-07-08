@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { invalidateAdminCache, invalidateContentCache } from "@/lib/cache/invalidation";
 import { getRuntimeCached } from "@/lib/cache/runtime-cache";
 import { databaseConfigured, prisma } from "@/lib/db/prisma";
@@ -52,6 +53,13 @@ function cleanText(value: unknown) {
 function optionalText(value: unknown) {
   const text = cleanText(value);
   return text.length > 0 ? text : undefined;
+}
+
+function normalizeMultilineText(value: unknown) {
+  return cleanText(value)
+    .replace(/\r\n?/g, "\n")
+    .replace(/\\n/g, "\n")
+    .replace(/\/n/g, "\n");
 }
 
 function safeEmail(value: unknown) {
@@ -142,8 +150,8 @@ function normalizeSiteSettings(row?: SiteSettingsRow | null): SiteSettings {
     slogan: valueOrDefault(row?.slogan, defaultSiteSettings.slogan),
     description: valueOrDefault(row?.description, defaultSiteSettings.description),
     bio: valueOrDefault(row?.bio, defaultSiteSettings.bio),
-    education: hasRow ? cleanText(row?.education) : defaultSiteSettings.education,
-    research: hasRow ? cleanText(row?.research) : defaultSiteSettings.research,
+    education: hasRow ? normalizeMultilineText(row?.education) : defaultSiteSettings.education,
+    research: hasRow ? normalizeMultilineText(row?.research) : defaultSiteSettings.research,
     skills: hasRow
       ? uniqueStrings(Array.isArray(row?.skills) ? row.skills.map(cleanText).filter(Boolean) : [])
       : defaultSiteSettings.skills,
@@ -163,31 +171,41 @@ function normalizeSiteSettings(row?: SiteSettingsRow | null): SiteSettings {
 }
 
 function shouldUseDatabase() {
-  if (process.env.NEXT_PHASE === "phase-production-build" || process.env.npm_lifecycle_event === "build") {
-    return false;
-  }
   return databaseConfigured();
 }
 
-export const getSiteSettings = cache(async (): Promise<SiteSettings> => {
-  return getRuntimeCached("site:settings", 60 * 1000, async () => {
-    if (!shouldUseDatabase()) {
-      return normalizeSiteSettings(defaultSiteSettings);
-    }
+function reportSiteSettingsFallback(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  if (process.env.NODE_ENV === "development") {
+    console.warn(`Site settings unavailable, using defaults: ${message}`);
+    return;
+  }
+  console.error(`Site settings unavailable, using defaults: ${message}`);
+}
 
-    try {
-      const row = await prisma.siteSetting.findUnique({
-        where: { id: siteSettingsId }
-      });
-      return normalizeSiteSettings(row);
-    } catch (error) {
-      if (process.env.NODE_ENV === "development") {
-        const message = error instanceof Error ? error.message : String(error);
-        console.warn(`Site settings unavailable, using defaults: ${message}`);
-      }
-      return normalizeSiteSettings(defaultSiteSettings);
-    }
-  });
+async function querySiteSettings(): Promise<SiteSettings> {
+  if (!shouldUseDatabase()) {
+    return normalizeSiteSettings(defaultSiteSettings);
+  }
+
+  try {
+    const row = await prisma.siteSetting.findUnique({
+      where: { id: siteSettingsId }
+    });
+    return normalizeSiteSettings(row);
+  } catch (error) {
+    reportSiteSettingsFallback(error);
+    return normalizeSiteSettings(defaultSiteSettings);
+  }
+}
+
+const cachedSiteSettings = unstable_cache(querySiteSettings, ["site:settings"], {
+  revalidate: 300,
+  tags: ["site"]
+});
+
+export const getSiteSettings = cache(async (): Promise<SiteSettings> => {
+  return getRuntimeCached("site:settings", 60 * 1000, cachedSiteSettings);
 });
 
 export async function saveSiteSettings(input: SiteSettingsInput) {
@@ -202,8 +220,8 @@ export async function saveSiteSettings(input: SiteSettingsInput) {
     slogan: valueOrDefault(input.slogan, defaultSiteSettings.slogan),
     description: valueOrDefault(input.description, defaultSiteSettings.description),
     bio: valueOrDefault(input.bio, defaultSiteSettings.bio),
-    education: cleanText(input.education),
-    research: cleanText(input.research),
+    education: normalizeMultilineText(input.education),
+    research: normalizeMultilineText(input.research),
     skills,
     resumeUrl: safePublicUrl(input.resumeUrl),
     logo: safePublicUrl(input.logo),

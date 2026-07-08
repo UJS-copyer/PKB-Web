@@ -33,9 +33,6 @@ async function ensureDataDir() {
 }
 
 function shouldUseDatabase() {
-  if (process.env.NEXT_PHASE === "phase-production-build" || process.env.npm_lifecycle_event === "build") {
-    return false;
-  }
   return databaseConfigured() && process.env.ADMIN_STATE_STORE !== "file";
 }
 

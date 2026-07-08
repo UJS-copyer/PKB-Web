@@ -29,11 +29,14 @@ export function invalidateContentCache() {
   clearRuntimeCache("ai:");
   safeInvalidate(() => revalidateTag("content"));
   safeInvalidate(() => revalidateTag("assets"));
+  safeInvalidate(() => revalidateTag("projects"));
+  safeInvalidate(() => revalidateTag("site"));
   safeInvalidate(() => revalidatePath("/", "layout"));
   safeInvalidate(() => revalidatePath("/"));
   safeInvalidate(() => revalidatePath("/knowledge"));
   safeInvalidate(() => revalidatePath("/blog"));
   safeInvalidate(() => revalidatePath("/projects"));
+  safeInvalidate(() => revalidatePath("/projects/[slug]", "page"));
   safeInvalidate(() => revalidatePath("/ai"));
   safeInvalidate(() => revalidatePath("/about"));
   safeInvalidate(() => revalidatePath("/rss.xml"));

@@ -47,9 +47,6 @@ export type NotePageData = {
 };
 
 function prefersDatabase() {
-  if (process.env.NEXT_PHASE === "phase-production-build" || process.env.npm_lifecycle_event === "build") {
-    return false;
-  }
   const source = process.env.CONTENT_SOURCE;
   if (source === "vault") return false;
   if (source === "database") return true;

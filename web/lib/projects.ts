@@ -36,19 +36,30 @@ function fallbackProjectRecords(): ProjectRecord[] {
 const projectOrderBy = [{ sortOrder: "asc" as const }, { createdAt: "desc" as const }];
 
 function shouldUseDatabase() {
-  if (process.env.NEXT_PHASE === "phase-production-build" || process.env.npm_lifecycle_event === "build") {
-    return false;
-  }
   return databaseConfigured();
+}
+
+function reportProjectFallback(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  if (process.env.NODE_ENV === "development") {
+    console.warn(`Project query unavailable, using fallback projects: ${message}`);
+    return;
+  }
+  console.error(`Project query unavailable, using fallback projects: ${message}`);
 }
 
 async function queryVisibleProjects() {
   if (!shouldUseDatabase()) return fallbackProjectRecords();
-  const projects = await prisma.project.findMany({
-    where: { visible: true },
-    orderBy: projectOrderBy
-  });
-  return projects.length > 0 ? projects : fallbackProjectRecords();
+  try {
+    const projects = await prisma.project.findMany({
+      where: { visible: true },
+      orderBy: projectOrderBy
+    });
+    return projects.length > 0 ? projects : fallbackProjectRecords();
+  } catch (error) {
+    reportProjectFallback(error);
+    return fallbackProjectRecords();
+  }
 }
 
 const cachedVisibleProjects = unstable_cache(queryVisibleProjects, ["projects:visible"], {
