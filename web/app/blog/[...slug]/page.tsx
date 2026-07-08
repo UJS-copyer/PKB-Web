@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: BlogPostProps): Promise<Metad
   const { slug } = await params;
   const post = await getNoteBySlug(slug);
   return {
-    title: post?.published || post?.type === "blog" ? post.title : "Blog",
+    title: post?.published || post?.type === "blog" ? post.title : "博客",
     description: post?.excerpt
   };
 }
@@ -43,13 +43,13 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
       <Button asChild variant="ghost" size="sm" className="mb-6">
         <Link href="/blog">
           <ArrowLeft className="size-4" />
-          Blog
+          返回博客
         </Link>
       </Button>
       <article>
         <header className="mb-8 border-b border-border pb-8">
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
-            {date.displayDateLabel} {date.displayDate} / {post.readingMinutes} min read
+            {date.displayDateLabel} {date.displayDate} / 预计阅读 {post.readingMinutes} 分钟
           </p>
           <h1 className="mt-4 text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
             {post.title}

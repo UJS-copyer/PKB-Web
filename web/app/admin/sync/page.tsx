@@ -8,7 +8,7 @@ import { getSyncDashboard } from "@/lib/admin/state-store";
 import { getLocalVaultSnapshot } from "@/lib/sync/runner";
 
 export const metadata: Metadata = {
-  title: "Knowledge Sync"
+  title: "知识同步"
 };
 
 export default async function AdminSyncPage() {
@@ -19,8 +19,8 @@ export default async function AdminSyncPage() {
   return (
     <main>
       <AdminPageHeader
-        eyebrow="Admin / Sync"
-        title="Knowledge Sync"
+        eyebrow="后台 / 同步"
+        title="知识同步"
         description="扫描 Vault、同步新增/修改/删除、重建全文索引和 Embedding。"
       />
       <section className="mx-auto grid max-w-6xl gap-6 px-4 py-10 sm:px-6 lg:grid-cols-[1fr_360px] lg:px-8">
@@ -66,7 +66,7 @@ export default async function AdminSyncPage() {
                 </span>
                 <span className="inline-flex items-center gap-2">
                   <Clock className="size-3" />
-                  {repository.lastSyncedAt ?? "Never synced"}
+                  {repository.lastSyncedAt ?? "尚未同步"}
                 </span>
               </div>
             </div>
@@ -77,11 +77,11 @@ export default async function AdminSyncPage() {
             <CardTitle>当前状态</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
-            <p>Local Notes: {local.notes}</p>
-            <p>Local Assets: {local.assets}</p>
-            <p>Pending Jobs: {dashboard.pendingJobs}</p>
-            <p>Failed Jobs: {dashboard.failedJobs}</p>
-            <p className="break-all">Local Path: {local.path}</p>
+            <p>本地笔记：{local.notes}</p>
+            <p>本地资源：{local.assets}</p>
+            <p>等待任务：{dashboard.pendingJobs}</p>
+            <p>失败任务：{dashboard.failedJobs}</p>
+            <p className="break-all">本地路径：{local.path}</p>
           </CardContent>
         </Card>
         <Card className="lg:col-span-2">
@@ -107,7 +107,7 @@ export default async function AdminSyncPage() {
                 </div>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground">No sync jobs yet.</p>
+              <p className="text-sm text-muted-foreground">暂时还没有同步任务。</p>
             )}
           </CardContent>
         </Card>
@@ -125,7 +125,7 @@ export default async function AdminSyncPage() {
                 </div>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground">No logs yet.</p>
+              <p className="text-sm text-muted-foreground">暂时还没有同步日志。</p>
             )}
           </CardContent>
         </Card>

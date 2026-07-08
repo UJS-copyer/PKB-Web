@@ -109,7 +109,7 @@ export function KnowledgeExplorer({ tree, notes, recent, random, graph, initialQ
     <div className="mx-auto grid max-w-[1680px] gap-5 px-3 py-5 sm:px-6 sm:py-8 lg:grid-cols-[280px_minmax(0,1fr)] lg:px-8 xl:grid-cols-[300px_minmax(0,1fr)_260px] 2xl:grid-cols-[320px_minmax(0,1fr)_280px]">
       <aside className="hidden lg:block">
         <div className="sticky top-24">
-          <PanelTitle icon={Folder} label="Vault" value={`${notes.length} notes`} />
+          <PanelTitle icon={Folder} label="知识目录" value={`${notes.length} 篇`} />
           <ScrollArea className="mt-4 h-[calc(100vh-10rem)] rounded-lg border border-border/80 bg-card/45 p-3">
             {directory}
           </ScrollArea>
@@ -120,16 +120,16 @@ export function KnowledgeExplorer({ tree, notes, recent, random, graph, initialQ
         <section className="rounded-lg border border-border/80 bg-card/45 p-5 sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">Obsidian Knowledge Base</p>
-              <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Knowledge</h1>
+              <p className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">Obsidian 知识库</p>
+              <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">知识库</h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
                 这里展示从 Obsidian 同步来的笔记、公开文章、标签和反向链接。内容源保持唯一，网站只负责阅读、检索和发布。
               </p>
             </div>
             <div className="grid grid-cols-3 gap-2 sm:min-w-[320px]">
-              <Stat label="Notes" value={String(notes.length)} />
-              <Stat label="Folders" value={String(folderCount)} />
-              <Stat label="Public" value={String(notes.filter((note) => note.published || note.type === "blog").length)} />
+              <Stat label="笔记" value={String(notes.length)} />
+              <Stat label="目录" value={String(folderCount)} />
+              <Stat label="公开" value={String(notes.filter((note) => note.published || note.type === "blog").length)} />
             </div>
           </div>
 
@@ -209,10 +209,11 @@ export function KnowledgeExplorer({ tree, notes, recent, random, graph, initialQ
         ) : null}
 
         <section className="rounded-lg border border-border/80 bg-card/45 p-5">
-          <PanelTitle icon={GitBranch} label="Graph" />
-          <div className="mt-4">
-            <GraphPreview graph={graph} />
-          </div>
+            <PanelTitle icon={GitBranch} label="Graph" />
+            
+            <div className="mt-4">
+              <GraphPreview graph={graph} />
+            </div>
         </section>
       </aside>
     </div>
@@ -285,18 +286,19 @@ function KnowledgeRow({ note }: { note: NoteListItem }) {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <p className="truncate font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">{note.directory || "Root"}</p>
+          
           <h2 className="mt-2 text-xl font-semibold leading-snug tracking-tight group-hover:text-accent sm:text-2xl">{note.title}</h2>
         </div>
         <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
           <Clock3 className="size-3.5" />
-          {note.readingMinutes} min
+          {note.readingMinutes} 分钟
         </div>
       </div>
       <p className="mt-3 line-clamp-2 text-sm leading-6 text-muted-foreground sm:text-[15px]">{note.excerpt || note.relativePath}</p>
       <div className="mt-4 flex flex-wrap items-center gap-2">
         {note.tags.slice(0, 4).map((tag) => (
           <Badge key={tag} variant="outline" className="rounded-full border-border/80 text-muted-foreground">
-            {tag}
+          {tag}
           </Badge>
         ))}
         <span className="basis-full font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground sm:ml-auto sm:basis-auto">

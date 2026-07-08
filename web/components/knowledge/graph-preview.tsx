@@ -24,7 +24,7 @@ export function GraphPreview({ graph }: { graph: GraphPreviewData }) {
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-card">
       <div className="border-b border-border p-4">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">Knowledge Graph</p>
+        <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">知识图谱</p>
       </div>
       <svg viewBox="0 0 300 300" className="h-72 w-full">
         {links.map((link, index) => {

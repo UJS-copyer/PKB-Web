@@ -18,7 +18,7 @@ export default async function AdminProjectsPage() {
   return (
     <main>
       <AdminPageHeader
-        eyebrow="Admin / Projects"
+        eyebrow="后台 / 项目"
         title="项目管理"
         description="维护首页精选项目和项目页内容，适合个人展示与简历项目沉淀。"
       />

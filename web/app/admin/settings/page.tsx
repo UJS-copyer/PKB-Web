@@ -19,7 +19,7 @@ export default async function AdminSettingsPage() {
   return (
     <main>
       <AdminPageHeader
-        eyebrow="Admin / Settings"
+        eyebrow="后台 / 设置"
         title="站点设置"
         description="站点基础信息与 Obsidian 私有仓库配置。后台只配置和同步，不编辑正文。"
       />

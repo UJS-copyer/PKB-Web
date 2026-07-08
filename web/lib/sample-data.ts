@@ -33,9 +33,9 @@ export const fallbackProjects = [
 
 export const adminStats = [
   { label: "文章数量", value: "125", hint: "来自当前 Obsidian Vault" },
-  { label: "标签数量", value: "Auto", hint: "同步时由 Frontmatter 与正文提取" },
+  { label: "标签数量", value: "自动", hint: "同步时由 Frontmatter 与正文提取" },
   { label: "图片数量", value: "247", hint: "png/jpg/tif 等资源" },
-  { label: "Embedding 状态", value: "Pending", hint: "连接 Qdrant 后可重建" }
+  { label: "Embedding 状态", value: "待构建", hint: "连接 Qdrant 后可重建" }
 ];
 
 export const ragSources = [

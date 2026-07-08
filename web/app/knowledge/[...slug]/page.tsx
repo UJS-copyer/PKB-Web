@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: NotePageProps): Promise<Metad
   const { slug } = await params;
   const note = await getNoteBySlug(slug);
   return {
-    title: note?.title ?? "Note",
+    title: note?.title ?? "笔记",
     description: note?.excerpt
   };
 }
@@ -46,7 +46,7 @@ export default async function KnowledgeNotePage({ params }: NotePageProps) {
         <Button asChild variant="ghost" size="sm" className="mb-6">
           <PendingLink href="/knowledge">
             <ArrowLeft className="size-4" />
-            Knowledge
+            返回知识库
           </PendingLink>
         </Button>
 
@@ -60,12 +60,12 @@ export default async function KnowledgeNotePage({ params }: NotePageProps) {
           <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
               <Clock3 className="size-4" />
-              {note.readingMinutes} min read
+              预计阅读 {note.readingMinutes} 分钟
             </span>
             <span>
               {date.displayDateLabel} {date.displayDate}
             </span>
-            <span>{backlinks.length} backlinks</span>
+            <span>{backlinks.length} 条反向链接</span>
           </div>
           {note.excerpt ? <p className="mt-5 max-w-3xl text-base leading-7 text-muted-foreground">{note.excerpt}</p> : null}
           <div className="mt-5 flex flex-wrap gap-2">
@@ -103,7 +103,7 @@ export default async function KnowledgeNotePage({ params }: NotePageProps) {
                       </Link>
                     ))
                   ) : (
-                    <p className="text-sm text-muted-foreground">No headings.</p>
+                    <p className="text-sm text-muted-foreground">暂无目录标题。</p>
                   )}
                 </div>
               </ScrollArea>
@@ -112,7 +112,7 @@ export default async function KnowledgeNotePage({ params }: NotePageProps) {
 
           <Card className="bg-card/45">
             <CardHeader>
-              <CardTitle className="text-base">Backlinks</CardTitle>
+              <CardTitle className="text-base">反向链接</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {backlinks.map((backlink) => (
@@ -126,7 +126,7 @@ export default async function KnowledgeNotePage({ params }: NotePageProps) {
                   {backlink.title}
                 </PendingLink>
               ))}
-              {backlinks.length === 0 ? <p className="text-sm text-muted-foreground">No backlinks yet.</p> : null}
+              {backlinks.length === 0 ? <p className="text-sm text-muted-foreground">暂时还没有反向链接。</p> : null}
             </CardContent>
           </Card>
 
@@ -157,7 +157,7 @@ export default async function KnowledgeNotePage({ params }: NotePageProps) {
                 </PendingLink>
               ))}
               {related.length === 0 && linkedNotes.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No related notes yet.</p>
+                <p className="text-sm text-muted-foreground">暂时还没有相关文章。</p>
               ) : null}
             </CardContent>
           </Card>

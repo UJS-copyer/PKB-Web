@@ -7,7 +7,7 @@ import { adminStats } from "@/lib/sample-data";
 import { getSyncDashboard } from "@/lib/admin/state-store";
 
 export const metadata: Metadata = {
-  title: "Admin"
+  title: "后台"
 };
 
 const adminLinks = [
@@ -27,7 +27,7 @@ export default async function AdminPage() {
 
   return (
     <main>
-      <AdminPageHeader eyebrow="Admin" title="轻量后台" description="后台只负责同步、发布和配置，不提供富文本编辑器。" />
+      <AdminPageHeader eyebrow="后台" title="轻量后台" description="后台只负责同步、发布和配置，不提供富文本编辑器。" />
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat) => (
@@ -45,9 +45,9 @@ export default async function AdminPage() {
         <Card className="mt-8">
           <CardHeader>
             <CardTitle className="flex flex-wrap items-center gap-3">
-              Repository
+              仓库信息
               <Badge variant={sync.repository.syncMode === "auto" ? "accent" : "outline"}>
-                {sync.repository.syncMode}
+                {sync.repository.syncMode === "auto" ? "自动同步" : "手动同步"}
               </Badge>
             </CardTitle>
           </CardHeader>

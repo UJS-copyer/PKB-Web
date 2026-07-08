@@ -18,9 +18,9 @@ export default async function BlogPage() {
   return (
     <main>
       <PageHeader
-        eyebrow="Blog"
+        eyebrow="博客"
         title="公开文章"
-        description="Blog 是 Knowledge 中被 Frontmatter 标记为公开的文章视图。"
+        description="博客是知识库中被 Frontmatter 标记为公开发布的文章视图。"
       />
       <section className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="mb-8 flex justify-end">

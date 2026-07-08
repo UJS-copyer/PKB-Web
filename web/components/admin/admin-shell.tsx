@@ -7,12 +7,12 @@ import { ThemeToggle } from "@/components/site/theme-toggle";
 import { cn } from "@/lib/utils";
 
 const adminNav = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/sync", label: "Knowledge Sync", icon: RefreshCw },
-  { href: "/admin/publish", label: "Blog Publish", icon: FileCheck2 },
-  { href: "/admin/projects", label: "Projects", icon: FolderKanban },
-  { href: "/admin/ai-config", label: "AI Config", icon: Bot },
-  { href: "/admin/settings", label: "Settings", icon: Settings }
+  { href: "/admin", label: "仪表盘", icon: LayoutDashboard },
+  { href: "/admin/sync", label: "知识同步", icon: RefreshCw },
+  { href: "/admin/publish", label: "博客发布", icon: FileCheck2 },
+  { href: "/admin/projects", label: "项目管理", icon: FolderKanban },
+  { href: "/admin/ai-config", label: "AI 配置", icon: Bot },
+  { href: "/admin/settings", label: "站点设置", icon: Settings }
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
@@ -23,8 +23,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-border bg-card/35 lg:block">
         <div className="flex h-16 items-center border-b border-border px-5">
           <Link href="/admin" className="grid gap-0.5">
-            <span className="text-sm font-semibold">Admin Console</span>
-            <span className="text-xs text-muted-foreground">Sync / Publish / Config</span>
+            <span className="text-sm font-semibold">后台控制台</span>
+            <span className="text-xs text-muted-foreground">同步 / 发布 / 配置</span>
           </Link>
         </div>
         <nav className="grid gap-1 p-3">
@@ -52,7 +52,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur sm:px-6">
           <div className="flex min-w-0 items-center gap-3">
             <Link href="/admin" className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground lg:hidden">
-              Admin
+              后台
             </Link>
             <nav className="hidden items-center gap-1 sm:flex lg:hidden">
               {adminNav.slice(1).map((item) => (
@@ -68,7 +68,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               className="inline-flex h-8 items-center gap-2 rounded-md border border-border px-3 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <ExternalLink className="size-3.5" />
-              View site
+              查看前台
             </Link>
             <ThemeToggle />
           </div>

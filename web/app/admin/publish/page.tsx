@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { getAdminNotes } from "@/lib/content/source";
 
 export const metadata: Metadata = {
-  title: "Blog Publish"
+  title: "博客发布"
 };
 
 export default async function AdminPublishPage() {
@@ -16,9 +16,9 @@ export default async function AdminPublishPage() {
   return (
     <main>
       <AdminPageHeader
-        eyebrow="Admin / Publish"
-        title="Blog Publish"
-        description="Visibility 控制 Knowledge/AI 可见性，Published 控制是否进入 Blog。修改会写回 Markdown Frontmatter。"
+        eyebrow="后台 / 发布"
+        title="博客发布"
+        description="可见性控制知识库与 AI 的前台可见范围，发布状态控制是否进入博客。修改会写回 Markdown Frontmatter。"
       />
       <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
         <Card>
@@ -27,7 +27,7 @@ export default async function AdminPublishPage() {
           </CardHeader>
           <CardContent>
             <div className="mb-5">
-              <Input placeholder="Filter notes..." />
+              <Input placeholder="筛选笔记标题或路径..." />
             </div>
             <div className="divide-y divide-border rounded-lg border border-border">
               {notes.map((note) => (
@@ -41,7 +41,7 @@ export default async function AdminPublishPage() {
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="font-medium">{note.title}</h2>
                       <Badge variant={note.visibility === "public" ? "accent" : "outline"}>{note.visibility}</Badge>
-                      {note.published ? <Badge variant="accent">Blog</Badge> : <Badge variant="outline">Draft</Badge>}
+                      {note.published ? <Badge variant="accent">博客</Badge> : <Badge variant="outline">草稿</Badge>}
                     </div>
                     <p className="mt-1 break-all text-xs text-muted-foreground">{note.relativePath}</p>
                     <input type="hidden" name="sourcePath" value={note.relativePath} />
@@ -51,11 +51,11 @@ export default async function AdminPublishPage() {
                         <Input name="slug" defaultValue={note.slug} className="h-8" />
                       </label>
                       <label className="grid gap-1 text-xs text-muted-foreground">
-                        Category
+                        分类
                         <Input name="category" defaultValue={note.category ?? ""} className="h-8" />
                       </label>
                       <label className="grid gap-1 text-xs text-muted-foreground sm:col-span-2">
-                        Cover
+                        封面
                         <Input name="cover" defaultValue={note.cover ?? ""} className="h-8" />
                       </label>
                     </div>
@@ -76,9 +76,9 @@ export default async function AdminPublishPage() {
                         defaultValue={note.visibility}
                         className="h-9 rounded-md border border-input bg-background/60 px-2 text-sm"
                       >
-                        <option value="public">public</option>
-                        <option value="private">private</option>
-                        <option value="unlisted">unlisted</option>
+                        <option value="public">公开</option>
+                        <option value="private">私有</option>
+                        <option value="unlisted">不公开链接</option>
                       </select>
                     </label>
                     <Button variant="outline" size="sm" type="submit">
