@@ -3,10 +3,43 @@ import { streamText } from "ai";
 import { getAiConfig, getChatProviderConfig } from "@/lib/ai/config";
 import { buildRagPrompt, retrieveSources } from "@/lib/rag/retrieval";
 
+type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
+function normalizeMessages(input: unknown): ChatMessage[] {
+  if (!Array.isArray(input)) return [];
+  return input
+    .map((item) => {
+      const role = typeof item?.role === "string" ? item.role : "";
+      const content = typeof item?.content === "string" ? item.content.trim() : "";
+      return (role === "user" || role === "assistant") && content ? { role, content } : null;
+    })
+    .filter((item): item is ChatMessage => Boolean(item))
+    .slice(-12);
+}
+
+function buildConversationContext(messages: ChatMessage[]) {
+  return messages
+    .slice(-8)
+    .map((message) => `${message.role === "user" ? "用户" : "助手"}：${message.content}`)
+    .join("\n");
+}
+
 export async function POST(request: Request) {
-  const { question } = (await request.json()) as { question?: string };
+  const body = await request.json();
+  const messages = normalizeMessages(body.messages);
+  const question =
+    messages
+      .slice()
+      .reverse()
+      .find((message) => message.role === "user")?.content ??
+    (typeof body.question === "string" ? body.question : "");
   const config = await getAiConfig();
-  const sources = await retrieveSources(question ?? "", config.topK);
+  const context = buildConversationContext(messages);
+  const retrievalQuery = [context, question].filter(Boolean).join("\n\n当前问题：");
+  const sources = await retrieveSources(retrievalQuery || question, config.topK);
   const chatProvider = getChatProviderConfig();
 
   if (chatProvider.apiKey) {
@@ -17,7 +50,11 @@ export async function POST(request: Request) {
     const result = streamText({
       model: provider(config.chatModel || chatProvider.model || "gpt-4o-mini"),
       temperature: config.temperature,
-      prompt: buildRagPrompt(question ?? "", sources, config.systemPrompt)
+      prompt: buildRagPrompt(
+        context ? `对话上下文：\n${context}\n\n当前问题：\n${question}` : question,
+        sources,
+        config.systemPrompt
+      )
     });
 
     return result.toTextStreamResponse({

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { UploadField } from "@/components/admin/upload-field";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -58,6 +59,7 @@ export default async function AdminSettingsPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="grid gap-2 text-sm">
                   <span className="text-muted-foreground">教育经历</span>
+                  <span className="text-xs text-muted-foreground/80">支持一行一段，首页会按多段展示。</span>
                   <Textarea name="education" defaultValue={settings.education} />
                 </label>
                 <label className="grid gap-2 text-sm">
@@ -72,14 +74,20 @@ export default async function AdminSettingsPage() {
               </label>
 
               <div className="grid gap-4 md:grid-cols-2">
-                <label className="grid gap-2 text-sm">
-                  <span className="text-muted-foreground">头像 URL / 路径</span>
-                  <Input name="avatar" defaultValue={settings.avatar} />
-                </label>
-                <label className="grid gap-2 text-sm">
-                  <span className="text-muted-foreground">简历链接</span>
-                  <Input name="resumeUrl" defaultValue={settings.resumeUrl ?? ""} />
-                </label>
+                <UploadField
+                  name="avatar"
+                  label="头像 URL / 路径"
+                  purpose="avatar"
+                  accept="image/png,image/jpeg,image/webp"
+                  defaultValue={settings.avatar}
+                />
+                <UploadField
+                  name="resumeUrl"
+                  label="简历链接"
+                  purpose="resume"
+                  accept="application/pdf"
+                  defaultValue={settings.resumeUrl ?? ""}
+                />
                 <label className="grid gap-2 text-sm">
                   <span className="text-muted-foreground">GitHub</span>
                   <Input name="github" defaultValue={settings.github ?? ""} />

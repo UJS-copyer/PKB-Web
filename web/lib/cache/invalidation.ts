@@ -24,6 +24,7 @@ export function invalidateAdminCache() {
 
 export function invalidateContentCache() {
   clearRuntimeCache("content:");
+  clearRuntimeCache("projects:");
   clearRuntimeCache("site:");
   clearRuntimeCache("ai:");
   safeInvalidate(() => revalidateTag("content"));

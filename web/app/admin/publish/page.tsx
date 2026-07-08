@@ -4,21 +4,21 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { getRecentNotes } from "@/lib/content/source";
+import { getAdminNotes } from "@/lib/content/source";
 
 export const metadata: Metadata = {
   title: "Blog Publish"
 };
 
 export default async function AdminPublishPage() {
-  const notes = await getRecentNotes(12);
+  const notes = await getAdminNotes(30);
 
   return (
     <main>
       <AdminPageHeader
         eyebrow="Admin / Publish"
         title="Blog Publish"
-        description="发布状态最终写回 Markdown Frontmatter，保持 Obsidian 为唯一内容来源。"
+        description="Visibility 控制 Knowledge/AI 可见性，Published 控制是否进入 Blog。修改会写回 Markdown Frontmatter。"
       />
       <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
         <Card>
@@ -40,7 +40,8 @@ export default async function AdminPublishPage() {
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="font-medium">{note.title}</h2>
-                      {note.published ? <Badge variant="accent">Published</Badge> : <Badge variant="outline">Draft</Badge>}
+                      <Badge variant={note.visibility === "public" ? "accent" : "outline"}>{note.visibility}</Badge>
+                      {note.published ? <Badge variant="accent">Blog</Badge> : <Badge variant="outline">Draft</Badge>}
                     </div>
                     <p className="mt-1 break-all text-xs text-muted-foreground">{note.relativePath}</p>
                     <input type="hidden" name="sourcePath" value={note.relativePath} />
@@ -62,11 +63,23 @@ export default async function AdminPublishPage() {
                   <div className="grid gap-3 rounded-md border border-border p-3">
                     <label className="flex items-center gap-2 text-sm">
                       <input type="checkbox" name="published" defaultChecked={note.published} />
-                      设为公开
+                      发布到 Blog
                     </label>
                     <label className="flex items-center gap-2 text-sm">
                       <input type="checkbox" name="featured" defaultChecked={note.featured} />
                       设为推荐
+                    </label>
+                    <label className="grid gap-1 text-sm">
+                      <span className="text-xs text-muted-foreground">Knowledge 可见性</span>
+                      <select
+                        name="visibility"
+                        defaultValue={note.visibility}
+                        className="h-9 rounded-md border border-input bg-background/60 px-2 text-sm"
+                      >
+                        <option value="public">public</option>
+                        <option value="private">private</option>
+                        <option value="unlisted">unlisted</option>
+                      </select>
                     </label>
                     <Button variant="outline" size="sm" type="submit">
                       写回 Gitee Frontmatter

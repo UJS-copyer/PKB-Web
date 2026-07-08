@@ -16,6 +16,7 @@ type EmbeddedPoint = {
     slug: string;
     title: string;
     excerpt: string;
+    visibility: string;
     chunkIndex: number;
     content: string;
   };
@@ -28,6 +29,7 @@ type EmbeddingSourceNote = {
   title: string;
   content: string;
   excerpt?: string | null;
+  visibility?: string | null;
 };
 
 export type EmbeddingNoteChange = {
@@ -37,6 +39,7 @@ export type EmbeddingNoteChange = {
   title: string;
   content: string;
   excerpt?: string | null;
+  visibility?: string | null;
 };
 
 function qdrantPointIdFromHash(hash: string) {
@@ -191,6 +194,7 @@ async function upsertChunksForNotes(notes: EmbeddingSourceNote[]) {
       slug: chunks[0].slug,
       title: chunks[0].title,
       excerpt: chunks[0].excerpt,
+      visibility: "public",
       chunkIndex: chunks[0].chunkIndex,
       content: chunks[0].content
     }
@@ -215,6 +219,7 @@ async function upsertChunksForNotes(notes: EmbeddingSourceNote[]) {
           slug: chunk.slug,
           title: chunk.title,
           excerpt: chunk.excerpt,
+          visibility: "public",
           chunkIndex: chunk.chunkIndex,
           content: chunk.content
         }
@@ -251,7 +256,7 @@ export async function rebuildEmbeddings() {
   const embeddingProvider = getEmbeddingProviderConfig(config);
   const openai = getEmbeddingClient(embeddingProvider);
   const notes = await prisma.note.findMany({
-    where: { status: "active" },
+    where: { status: "active", visibility: "public" },
     select: {
       id: true,
       sourcePath: true,
@@ -302,6 +307,7 @@ export async function rebuildEmbeddings() {
         slug: chunks[0].slug,
         title: chunks[0].title,
         excerpt: chunks[0].excerpt,
+        visibility: "public",
         chunkIndex: chunks[0].chunkIndex,
         content: chunks[0].content
       }
@@ -329,6 +335,7 @@ export async function rebuildEmbeddings() {
           slug: chunk.slug,
           title: chunk.title,
           excerpt: chunk.excerpt,
+          visibility: "public",
           chunkIndex: chunk.chunkIndex,
           content: chunk.content
         }
@@ -368,7 +375,23 @@ export async function syncEmbeddingsForNotes(notes: EmbeddingSourceNote[]) {
     return { notes: 0, chunks: 0, deleted: 0 };
   }
 
-  return upsertChunksForNotes(notes);
+  const publicNotes = notes.filter((note) => (note.visibility ?? "public") === "public");
+  const hiddenPaths = notes
+    .filter((note) => (note.visibility ?? "public") !== "public")
+    .map((note) => note.sourcePath);
+
+  if (hiddenPaths.length > 0) {
+    await deleteChunksBySourcePaths(hiddenPaths);
+  }
+
+  if (publicNotes.length === 0) {
+    invalidateAdminCache();
+    invalidateContentCache();
+    return { notes: 0, chunks: 0, deleted: hiddenPaths.length };
+  }
+
+  const result = await upsertChunksForNotes(publicNotes);
+  return { ...result, deleted: result.deleted + hiddenPaths.length };
 }
 
 export async function deleteEmbeddingsForPaths(sourcePaths: string[]) {

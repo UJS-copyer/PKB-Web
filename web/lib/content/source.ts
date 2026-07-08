@@ -16,7 +16,7 @@ import {
   type Note,
   type NoteMeta
 } from "./vault";
-import { getDatabaseAssets, getDatabaseNoteBySlug, getDatabaseNoteMetas, resolveNoteFromList } from "./database";
+import { getDatabaseAdminNoteMetas, getDatabaseAssets, getDatabaseNoteBySlug, getDatabaseNoteMetas, resolveNoteFromList } from "./database";
 
 export { decodeRouteSegments };
 export type { AssetRecord, Note, NoteMeta };
@@ -82,8 +82,19 @@ async function readDatabaseAssetsOrNull() {
 
 export const getAllNotes = cache(async () => {
   const notes = (await readDatabaseNotesOrNull()) ?? getVaultNotes();
-  return [...notes].sort((a, b) => dateValue(b) - dateValue(a));
+  return [...notes].filter((note) => note.visibility === "public").sort((a, b) => dateValue(b) - dateValue(a));
 });
+
+export async function getAdminNotes(limit = 50) {
+  if (databaseConfigured() && prefersDatabase()) {
+    try {
+      return await getDatabaseAdminNoteMetas(limit);
+    } catch {
+      return getVaultNotes().slice(0, limit);
+    }
+  }
+  return getVaultNotes().slice(0, limit);
+}
 
 export async function getRecentNotes(limit = 8) {
   return (await getAllNotes()).slice(0, limit);
@@ -91,11 +102,14 @@ export async function getRecentNotes(limit = 8) {
 
 export async function getPublishedNotes() {
   if (!prefersDatabase()) return getVaultPublishedNotes();
-  return (await getAllNotes()).filter((note) => note.published || note.type === "blog");
+  return (await getAllNotes()).filter((note) => note.visibility === "public" && (note.published || note.type === "blog"));
 }
 
 export async function getNoteBySlug(slugSegments: string[]) {
-  if (!prefersDatabase()) return getVaultNoteBySlug(slugSegments);
+  if (!prefersDatabase()) {
+    const note = getVaultNoteBySlug(slugSegments);
+    return note?.visibility === "public" ? note : null;
+  }
   const slug = decodeRouteSegments(slugSegments).join("/");
   try {
     return await getDatabaseNoteBySlug(slug);

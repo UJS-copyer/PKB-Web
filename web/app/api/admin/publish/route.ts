@@ -10,6 +10,11 @@ function toBoolean(value: unknown) {
   return value === true || value === "true" || value === "on";
 }
 
+function toVisibility(value: unknown) {
+  const visibility = String(value ?? "").trim();
+  return visibility === "private" || visibility === "unlisted" || visibility === "public" ? visibility : undefined;
+}
+
 export async function POST(request: Request) {
   try {
     await requireAdmin();
@@ -32,7 +37,8 @@ export async function POST(request: Request) {
       featured: toBoolean(values.featured),
       slug: values.slug ? String(values.slug) : undefined,
       cover: values.cover ? String(values.cover) : undefined,
-      category: values.category ? String(values.category) : undefined
+      category: values.category ? String(values.category) : undefined,
+      visibility: toVisibility(values.visibility)
     });
 
     await adapter.updateFile(sourcePath, next, `chore(site): update publish metadata for ${sourcePath}`);

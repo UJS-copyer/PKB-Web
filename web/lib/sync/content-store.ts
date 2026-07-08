@@ -129,6 +129,7 @@ async function upsertNote(note: Note, file: RemoteMarkdownFile) {
     sha: file.sha,
     hash: hashContent(file.content),
     status: "active" as const,
+    visibility: note.visibility,
     type: note.type,
     published: note.published,
     featured: note.featured,
@@ -245,7 +246,8 @@ export async function syncContentToDatabase(input: {
             slug: upserted.slug,
             title: upserted.title,
             content: upserted.content,
-            excerpt: upserted.excerpt
+            excerpt: upserted.excerpt,
+            visibility: upserted.visibility
           } satisfies EmbeddingNoteChange)
         : undefined
     };

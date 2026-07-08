@@ -77,11 +77,26 @@ async function retrieveVectorSources(question: string, limit: number): Promise<R
     with_payload: true
   });
 
+  const paths = results
+    .map((result) => {
+      const payload = (result.payload ?? {}) as Record<string, unknown>;
+      return typeof payload.sourcePath === "string" ? payload.sourcePath : "";
+    })
+    .filter(Boolean);
+  const publicRows =
+    paths.length > 0
+      ? await prisma.note.findMany({
+          where: { status: "active", visibility: "public", sourcePath: { in: paths } },
+          select: { sourcePath: true }
+        })
+      : [];
+  const publicPaths = new Set(publicRows.map((row) => row.sourcePath));
+
   const deduped = new Map<string, RetrievedSource>();
   for (const result of results) {
     const payload = (result.payload ?? {}) as Record<string, unknown>;
     const path = typeof payload.sourcePath === "string" ? payload.sourcePath : "";
-    if (!path) continue;
+    if (!path || !publicPaths.has(path)) continue;
 
     const current = deduped.get(path);
     const score = typeof result.score === "number" ? result.score : 0;

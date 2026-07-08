@@ -38,6 +38,12 @@ enum NoteStatus {
   deleted
 }
 
+enum NoteVisibility {
+  public
+  private
+  unlisted
+}
+
 model RepositoryConfig {
   id                 String             @id @default(cuid())
   provider           RepositoryProvider @default(gitee)
@@ -75,6 +81,7 @@ model Note {
   sha            String?
   hash           String
   status         NoteStatus  @default(active)
+  visibility     NoteVisibility @default(public)
   type           String      @default("note")
   published      Boolean     @default(false)
   featured       Boolean     @default(false)
@@ -86,8 +93,30 @@ model Note {
   chunks         EmbeddingChunk[]
 
   @@index([status, sourceUpdatedAt])
+  @@index([status, visibility])
   @@index([status, published])
   @@index([status, type])
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  year        String?
+  summary     String
+  description String?
+  stack       String[] @default([])
+  cover       String?
+  github      String?
+  demo        String?
+  docsUrl     String?
+  featured    Boolean  @default(false)
+  visible     Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([visible, featured, sortOrder])
 }
 
 model Asset {

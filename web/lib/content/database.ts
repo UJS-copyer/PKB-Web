@@ -24,6 +24,7 @@ const noteMetaSelect = {
   headings: true,
   type: true,
   published: true,
+  visibility: true,
   featured: true,
   readingMinutes: true,
   createdAt: true,
@@ -58,6 +59,7 @@ function toNote(row: {
   headings: unknown;
   type: string;
   published: boolean;
+  visibility: "public" | "private" | "unlisted";
   featured: boolean;
   readingMinutes: number;
   createdAt: Date;
@@ -87,6 +89,7 @@ function toNote(row: {
     description: row.description ?? undefined,
     cover: row.cover ?? undefined,
     published: row.published,
+    visibility: row.visibility,
     featured: row.featured,
     type: row.type as Note["type"],
     createdAt: row.createdAt.toISOString(),
@@ -111,7 +114,7 @@ function noteOrderBy() {
 
 async function queryDatabaseNoteMetas() {
   const rows = await prisma.note.findMany({
-    where: { status: "active" },
+    where: { status: "active", visibility: "public" },
     select: noteMetaSelect,
     orderBy: noteOrderBy()
   });
@@ -129,7 +132,7 @@ export async function getDatabaseNoteMetas() {
 
 async function queryDatabaseNotes() {
   const rows = await prisma.note.findMany({
-    where: { status: "active" },
+    where: { status: "active", visibility: "public" },
     select: noteDetailSelect,
     orderBy: noteOrderBy()
   });
@@ -147,7 +150,7 @@ export async function getDatabaseNotes() {
 
 async function queryDatabaseNoteBySlug(slug: string) {
   const row = await prisma.note.findFirst({
-    where: { status: "active", slug },
+    where: { status: "active", visibility: "public", slug },
     select: noteDetailSelect
   });
   return row ? toNote(row) : null;
@@ -160,6 +163,20 @@ export async function getDatabaseNoteBySlug(slug: string) {
       tags: ["content", `note:${slug}`]
     })()
   );
+}
+
+async function queryDatabaseAdminNoteMetas(limit = 50) {
+  const rows = await prisma.note.findMany({
+    where: { status: "active" },
+    select: noteMetaSelect,
+    orderBy: noteOrderBy(),
+    take: limit
+  });
+  return rows.map(toNote);
+}
+
+export async function getDatabaseAdminNoteMetas(limit = 50) {
+  return getRuntimeCached(`admin:note-metas:${limit}`, 60 * 1000, () => queryDatabaseAdminNoteMetas(limit));
 }
 
 async function queryDatabaseAssets(): Promise<AssetRecord[]> {

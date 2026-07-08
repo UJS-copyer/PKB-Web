@@ -4,19 +4,20 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink, Github } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { fallbackProjects } from "@/lib/sample-data";
+import { getProjectBySlug, getVisibleProjects } from "@/lib/projects";
 
 type ProjectPageProps = {
   params: Promise<{ slug: string }>;
 };
 
 export async function generateStaticParams() {
-  return fallbackProjects.map((project) => ({ slug: project.slug }));
+  const projects = await getVisibleProjects();
+  return projects.map((project) => ({ slug: project.slug }));
 }
 
 export default async function ProjectPage({ params }: ProjectPageProps) {
   const { slug } = await params;
-  const project = fallbackProjects.find((item) => item.slug === slug);
+  const project = await getProjectBySlug(slug);
   if (!project) notFound();
 
   return (
@@ -32,6 +33,11 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
           <p className="font-mono text-xs uppercase tracking-[0.24em] text-muted-foreground">{project.year}</p>
           <h1 className="mt-4 text-5xl font-semibold tracking-tight text-balance">{project.title}</h1>
           <p className="mt-6 max-w-2xl text-base leading-7 text-muted-foreground">{project.summary}</p>
+          {project.description ? (
+            <div className="mt-8 max-w-3xl whitespace-pre-line text-sm leading-7 text-foreground/85">
+              {project.description}
+            </div>
+          ) : null}
           <div className="mt-6 flex flex-wrap gap-2">
             {project.stack.map((tag) => (
               <Badge key={tag} variant="outline" className="rounded-full font-mono">
@@ -40,23 +46,35 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
             ))}
           </div>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Button asChild>
-              <Link href={project.github}>
-                <Github className="size-4" />
-                GitHub
-              </Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href={project.demo}>
-                <ExternalLink className="size-4" />
-                在线演示
-              </Link>
-            </Button>
+            {project.github ? (
+              <Button asChild>
+                <Link href={project.github}>
+                  <Github className="size-4" />
+                  GitHub
+                </Link>
+              </Button>
+            ) : null}
+            {project.demo ? (
+              <Button asChild variant="outline">
+                <Link href={project.demo}>
+                  <ExternalLink className="size-4" />
+                  在线演示
+                </Link>
+              </Button>
+            ) : null}
+            {project.docsUrl ? (
+              <Button asChild variant="outline">
+                <Link href={project.docsUrl}>
+                  <ExternalLink className="size-4" />
+                  文档
+                </Link>
+              </Button>
+            ) : null}
           </div>
         </article>
         <div className="overflow-hidden rounded-lg border border-border bg-card">
           <Image
-            src={project.cover}
+            src={project.cover ?? "/project-dashboard.jpg"}
             alt={project.title}
             width={720}
             height={480}

@@ -37,6 +37,7 @@ export type NoteMeta = NoteDisplayMeta & {
   description?: string;
   cover?: string;
   published: boolean;
+  visibility: "public" | "private" | "unlisted";
   featured: boolean;
   type: "note" | "blog" | "project";
   createdAt: string;
@@ -213,6 +214,11 @@ function frontmatterDate(data: Record<string, unknown>, keys: string[]) {
   return undefined;
 }
 
+function frontmatterVisibility(value: unknown): NoteMeta["visibility"] {
+  const visibility = String(value ?? "public").trim().toLowerCase();
+  return visibility === "private" || visibility === "unlisted" ? visibility : "public";
+}
+
 export function parseNoteFromRaw(input: {
   relativePath: string;
   raw: string;
@@ -232,6 +238,7 @@ export function parseNoteFromRaw(input: {
   const headingTitle = firstHeading(parsed.content);
   const title = frontmatterTitle(data.title) ?? fileTitle;
   const published = Boolean(data.published ?? data.publish ?? data.public ?? false);
+  const visibility = frontmatterVisibility(data.visibility);
   const type = String(data.type ?? (published ? "blog" : "note")) as NoteMeta["type"];
   const tags = extractTags(parsed.content, asArray(data.tags));
   const readingMinutes = Math.max(1, Math.ceil(stripMarkdown(parsed.content).length / 500));
@@ -249,6 +256,7 @@ export function parseNoteFromRaw(input: {
     description: data.description ? String(data.description) : undefined,
     cover: data.cover ? String(data.cover) : undefined,
     published,
+    visibility,
     featured: Boolean(data.featured ?? false),
     type,
     createdAt,
@@ -365,7 +373,7 @@ export function getRecentNotes(limit = 8) {
 }
 
 export function getPublishedNotes() {
-  return getAllNotes().filter((note) => note.published || note.type === "blog");
+  return getAllNotes().filter((note) => note.visibility === "public" && (note.published || note.type === "blog"));
 }
 
 export function getNoteBySlug(slugSegments: string[]) {

@@ -5,9 +5,9 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
-import { fallbackProjects } from "@/lib/sample-data";
+import type { ProjectRecord } from "@/lib/projects";
 
-export function FeaturedProjects({ compact = false }: { compact?: boolean }) {
+export function FeaturedProjects({ compact = false, projects }: { compact?: boolean; projects: ProjectRecord[] }) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const mouseX = useMotionValue(0);
@@ -37,7 +37,7 @@ export function FeaturedProjects({ compact = false }: { compact?: boolean }) {
           }}
           className="relative"
         >
-          {fallbackProjects.map((project, index) => (
+          {projects.map((project, index) => (
             <motion.div
               key={project.slug}
               initial={{ opacity: 0, y: 18 }}
@@ -87,8 +87,8 @@ export function FeaturedProjects({ compact = false }: { compact?: boolean }) {
           >
             {hoveredIndex !== null ? (
               <Image
-                src={fallbackProjects[hoveredIndex].cover}
-                alt={fallbackProjects[hoveredIndex].title}
+                src={projects[hoveredIndex].cover ?? "/project-dashboard.jpg"}
+                alt={projects[hoveredIndex].title}
                 width={576}
                 height={352}
                 className="size-full object-cover grayscale-[35%] contrast-110"

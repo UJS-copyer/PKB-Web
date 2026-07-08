@@ -6,6 +6,7 @@ export type PublishFields = {
   slug?: string;
   cover?: string;
   category?: string;
+  visibility?: "public" | "private" | "unlisted";
 };
 
 export function updateFrontmatter(raw: string, fields: PublishFields) {

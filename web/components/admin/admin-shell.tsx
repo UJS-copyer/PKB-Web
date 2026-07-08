@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bot, ExternalLink, FileCheck2, LayoutDashboard, RefreshCw, Settings } from "lucide-react";
+import { Bot, ExternalLink, FileCheck2, FolderKanban, LayoutDashboard, RefreshCw, Settings } from "lucide-react";
 import { ThemeToggle } from "@/components/site/theme-toggle";
 import { cn } from "@/lib/utils";
 
@@ -10,6 +10,7 @@ const adminNav = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/sync", label: "Knowledge Sync", icon: RefreshCw },
   { href: "/admin/publish", label: "Blog Publish", icon: FileCheck2 },
+  { href: "/admin/projects", label: "Projects", icon: FolderKanban },
   { href: "/admin/ai-config", label: "AI Config", icon: Bot },
   { href: "/admin/settings", label: "Settings", icon: Settings }
 ];
