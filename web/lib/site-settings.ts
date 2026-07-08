@@ -196,6 +196,10 @@ async function querySiteSettings(): Promise<SiteSettings> {
   }
 }
 
+export async function getFreshSiteSettings(): Promise<SiteSettings> {
+  return querySiteSettings();
+}
+
 const cachedSiteSettings = unstable_cache(querySiteSettings, ["site:settings"], {
   revalidate: 300,
   tags: ["site"]

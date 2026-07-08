@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { unstable_noStore as noStore } from "next/cache";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { UploadField } from "@/components/admin/upload-field";
 import { Button } from "@/components/ui/button";
@@ -6,14 +7,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { getRepositoryConfig } from "@/lib/admin/state-store";
-import { getSiteSettings } from "@/lib/site-settings";
+import { getFreshSiteSettings } from "@/lib/site-settings";
 
 export const metadata: Metadata = {
   title: "站点设置"
 };
 
 export default async function AdminSettingsPage() {
-  const [repository, settings] = await Promise.all([getRepositoryConfig(), getSiteSettings()]);
+  noStore();
+  const [repository, settings] = await Promise.all([getRepositoryConfig(), getFreshSiteSettings()]);
   const webhookUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://127.0.0.1:3000"}/api/webhooks/gitee`;
 
   return (
