@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { KnowledgeShell } from "@/components/knowledge/knowledge-shell";
 
 export const metadata: Metadata = {
-  title: "Knowledge"
+  title: "知识库"
 };
 
 export const revalidate = 60;

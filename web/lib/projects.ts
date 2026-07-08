@@ -74,7 +74,11 @@ export async function getVisibleProjects() {
 export async function getFeaturedProjects() {
   const projects = await getVisibleProjects();
   const featured = projects.filter((project) => project.featured);
-  return featured.length > 0 ? featured : projects.slice(0, 3);
+  if (featured.length >= 3) return featured.slice(0, 3);
+  if (featured.length === 0) return projects.slice(0, 3);
+
+  const featuredSlugs = new Set(featured.map((project) => project.slug));
+  return [...featured, ...projects.filter((project) => !featuredSlugs.has(project.slug)).slice(0, 3 - featured.length)];
 }
 
 export async function getProjectBySlug(slug: string) {
@@ -84,7 +88,14 @@ export async function getProjectBySlug(slug: string) {
 
 export async function getAdminProjects() {
   if (!shouldUseDatabase()) return fallbackProjectRecords();
-  return prisma.project.findMany({
-    orderBy: projectOrderBy
-  });
+
+  try {
+    const projects = await prisma.project.findMany({
+      orderBy: projectOrderBy
+    });
+    return projects.length > 0 ? projects : fallbackProjectRecords();
+  } catch (error) {
+    reportProjectFallback(error);
+    return fallbackProjectRecords();
+  }
 }

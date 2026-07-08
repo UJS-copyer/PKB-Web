@@ -25,7 +25,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
       <Button asChild variant="ghost" size="sm" className="mb-6">
         <Link href="/projects">
           <ArrowLeft className="size-4" />
-          Projects
+          返回项目列表
         </Link>
       </Button>
       <div className="grid gap-10 lg:grid-cols-[1fr_360px]">

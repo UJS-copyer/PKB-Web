@@ -9,7 +9,7 @@ import { getRepositoryConfig } from "@/lib/admin/state-store";
 import { getSiteSettings } from "@/lib/site-settings";
 
 export const metadata: Metadata = {
-  title: "Settings"
+  title: "站点设置"
 };
 
 export default async function AdminSettingsPage() {
@@ -20,13 +20,13 @@ export default async function AdminSettingsPage() {
     <main>
       <AdminPageHeader
         eyebrow="Admin / Settings"
-        title="Settings"
+        title="站点设置"
         description="站点基础信息与 Obsidian 私有仓库配置。后台只配置和同步，不编辑正文。"
       />
       <section className="mx-auto grid max-w-[1400px] gap-6 px-4 py-10 sm:px-6 lg:grid-cols-[minmax(0,1.08fr)_minmax(360px,0.92fr)] lg:px-8">
         <Card>
           <CardHeader>
-            <CardTitle>Site Profile</CardTitle>
+            <CardTitle>站点资料</CardTitle>
           </CardHeader>
           <CardContent>
             <form action="/api/admin/site-settings" method="post" className="grid gap-5">
@@ -41,10 +41,10 @@ export default async function AdminSettingsPage() {
                 </label>
               </div>
 
-              <label className="grid gap-2 text-sm">
-                <span className="text-muted-foreground">Slogan</span>
-                <Textarea name="slogan" defaultValue={settings.slogan} className="min-h-20" required />
-              </label>
+                <label className="grid gap-2 text-sm">
+                  <span className="text-muted-foreground">站点标语</span>
+                  <Textarea name="slogan" defaultValue={settings.slogan} className="min-h-20" required />
+                </label>
 
               <label className="grid gap-2 text-sm">
                 <span className="text-muted-foreground">首页简介</span>
@@ -122,7 +122,7 @@ export default async function AdminSettingsPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Obsidian Repository</CardTitle>
+            <CardTitle>Obsidian 仓库</CardTitle>
           </CardHeader>
           <CardContent>
             <form action="/api/admin/settings" method="post" className="grid gap-5">
@@ -148,7 +148,7 @@ export default async function AdminSettingsPage() {
                 </label>
               </div>
               <label className="grid gap-2 text-sm">
-                <span className="text-muted-foreground">Gitee Personal Access Token</span>
+                <span className="text-muted-foreground">Gitee 访问令牌</span>
                 <Input name="token" type="password" placeholder={repository.tokenMasked || "保存后仅显示掩码"} />
               </label>
               <label className="grid gap-2 text-sm">
@@ -161,7 +161,7 @@ export default async function AdminSettingsPage() {
               </label>
               <div className="rounded-md border border-border bg-muted/30 p-3">
                 <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                  WebHook URL
+                  WebHook 地址
                 </p>
                 <p className="mt-2 break-all text-sm">{webhookUrl}</p>
               </div>

@@ -39,7 +39,7 @@ function summarizeJob(job: SyncJob | null) {
       tone: "success" as const,
       text:
         notes !== null && chunks !== null
-          ? `最近一次重建成功：${notes} 篇笔记，${chunks} 个 chunks。`
+          ? `最近一次重建成功：${notes} 篇笔记，${chunks} 个分片。`
           : "最近一次 Embedding 重建成功。"
     };
   }

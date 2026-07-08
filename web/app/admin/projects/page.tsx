@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { getAdminProjects } from "@/lib/projects";
 
 export const metadata: Metadata = {
-  title: "Projects"
+  title: "项目管理"
 };
 
 export default async function AdminProjectsPage() {
@@ -19,7 +19,7 @@ export default async function AdminProjectsPage() {
     <main>
       <AdminPageHeader
         eyebrow="Admin / Projects"
-        title="Projects"
+        title="项目管理"
         description="维护首页精选项目和项目页内容，适合个人展示与简历项目沉淀。"
       />
       <section className="mx-auto grid max-w-[1400px] gap-6 px-4 py-10 sm:px-6 lg:px-8">
@@ -37,12 +37,15 @@ export default async function AdminProjectsPage() {
             <CardTitle>项目列表</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-5">
+            {projects.length === 0 ? (
+              <p className="text-sm text-muted-foreground">当前数据库还没有项目，前台会回退到示例项目。</p>
+            ) : null}
             {projects.map((project) => (
               <div key={project.slug} className="rounded-lg border border-border p-4">
                 <div className="mb-4 flex flex-wrap items-center gap-2">
                   <h2 className="font-medium">{project.title}</h2>
-                  {project.visible ? <Badge variant="accent">Visible</Badge> : <Badge variant="outline">Hidden</Badge>}
-                  {project.featured ? <Badge variant="outline">Featured</Badge> : null}
+                  {project.visible ? <Badge variant="accent">显示中</Badge> : <Badge variant="outline">已隐藏</Badge>}
+                  {project.featured ? <Badge variant="outline">首页精选</Badge> : null}
                 </div>
                 <ProjectForm project={project} />
               </div>

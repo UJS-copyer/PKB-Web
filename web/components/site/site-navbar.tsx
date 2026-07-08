@@ -20,7 +20,7 @@ import { ThemeToggle } from "./theme-toggle";
 
 export function SiteNavbar({ settings }: { settings: SiteSettings }) {
   const pathname = usePathname();
-  const publicNav = siteConfig.nav.filter((item) => item.href !== "/admin" && item.href !== "/about");
+  const publicNav = siteConfig.nav.filter((item) => item.href !== "/admin" && item.href !== "/about" && item.href !== "/#about");
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/82 backdrop-blur-xl">
@@ -61,7 +61,7 @@ export function SiteNavbar({ settings }: { settings: SiteSettings }) {
           <Button asChild variant="outline" size="sm" className="rounded-full font-mono text-xs">
             <PendingLink href="/knowledge">
               <Search className="size-3.5" />
-              Search
+              搜索
             </PendingLink>
           </Button>
           <ThemeToggle />
@@ -71,7 +71,7 @@ export function SiteNavbar({ settings }: { settings: SiteSettings }) {
           <ThemeToggle />
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon-sm" aria-label="Open menu">
+              <Button variant="ghost" size="icon-sm" aria-label="打开导航菜单">
                 <Menu className="size-4" />
               </Button>
             </SheetTrigger>

@@ -21,7 +21,7 @@ export function FeaturedProjects({ compact = false, projects }: { compact?: bool
         {!compact ? (
           <div className="mb-10">
             <p className="font-mono text-xs uppercase tracking-[0.24em] text-muted-foreground">
-              02 - Selected Projects
+              02 - 精选项目
             </p>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight">精选项目</h2>
           </div>

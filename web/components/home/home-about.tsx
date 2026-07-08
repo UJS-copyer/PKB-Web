@@ -1,8 +1,6 @@
-import Link from "next/link";
-import { ArrowUpRight, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import type { SiteSettings } from "@/lib/site-settings-types";
+import { ContactActions } from "@/components/site/contact-actions";
 
 export function HomeAbout({ settings }: { settings: SiteSettings }) {
   const educationLines = settings.education
@@ -15,7 +13,7 @@ export function HomeAbout({ settings }: { settings: SiteSettings }) {
       <div className="mx-auto grid max-w-[1400px] gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:px-8 lg:py-20">
         <div className="max-w-4xl">
           <p className="font-mono text-xs uppercase tracking-[0.24em] text-muted-foreground">
-            01 - About
+            01 - 关于我
           </p>
           <h2 className="mt-4 text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
             {settings.name}
@@ -34,32 +32,15 @@ export function HomeAbout({ settings }: { settings: SiteSettings }) {
           <div className="mt-10 grid gap-6 border-y border-border py-8 md:grid-cols-2">
             <div>
               <h3 className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                Research
+                研究方向
               </h3>
               <p className="mt-3 text-sm leading-7 text-foreground/82">{settings.research}</p>
             </div>
             <div>
               <h3 className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                Contact
+                联系方式
               </h3>
-              <div className="mt-3 flex flex-wrap gap-3">
-                {settings.resumeUrl ? (
-                  <Button asChild size="sm" className="rounded-full">
-                    <Link href={settings.resumeUrl}>
-                      <Download className="size-4" />
-                      简历
-                    </Link>
-                  </Button>
-                ) : null}
-                {settings.socials.map((social) => (
-                  <Button key={social.label} asChild size="sm" variant="outline" className="rounded-full">
-                    <Link href={social.href}>
-                      {social.label}
-                      <ArrowUpRight className="size-3.5" />
-                    </Link>
-                  </Button>
-                ))}
-              </div>
+              <ContactActions className="mt-3" email={settings.email} github={settings.github} resumeUrl={settings.resumeUrl} />
             </div>
           </div>
         </div>

@@ -11,18 +11,18 @@ export const metadata: Metadata = {
 };
 
 const adminLinks = [
-  { href: "/admin/sync", title: "Knowledge Sync", description: "扫描 Vault、增量同步、重建索引。" },
-  { href: "/admin/publish", title: "Blog Publish", description: "公开、推荐、封面和 slug 配置。" },
-  { href: "/admin/ai-config", title: "AI Config", description: "Provider、模型、Chunk、TopK、Prompt。" },
-  { href: "/admin/settings", title: "Settings", description: "站点标题、头像、社交链接、主题色。" }
+  { href: "/admin/sync", title: "知识同步", description: "扫描 Vault、增量同步、重建索引。" },
+  { href: "/admin/publish", title: "博客发布", description: "公开、推荐、封面和 slug 配置。" },
+  { href: "/admin/ai-config", title: "AI 配置", description: "Provider、模型、Chunk、TopK、Prompt。" },
+  { href: "/admin/settings", title: "站点设置", description: "站点标题、头像、社交链接、主题色。" }
 ];
 
 export default async function AdminPage() {
   const sync = await getSyncDashboard();
   const stats = [
     ...adminStats,
-    { label: "同步模式", value: sync.repository.syncMode === "auto" ? "Auto" : "Manual", hint: sync.repository.repoUrl },
-    { label: "任务队列", value: String(sync.pendingJobs), hint: `${sync.failedJobs} failed jobs` }
+    { label: "同步模式", value: sync.repository.syncMode === "auto" ? "自动" : "手动", hint: sync.repository.repoUrl },
+    { label: "任务队列", value: String(sync.pendingJobs), hint: `${sync.failedJobs} 个失败任务` }
   ];
 
   return (
@@ -53,8 +53,8 @@ export default async function AdminPage() {
           </CardHeader>
           <CardContent className="space-y-2 text-sm text-muted-foreground">
             <p className="break-all">{sync.repository.repoUrl}</p>
-            <p>Branch: {sync.repository.branch}</p>
-            <p>Last synced: {sync.repository.lastSyncedAt ?? "Never"}</p>
+            <p>分支：{sync.repository.branch}</p>
+            <p>最近同步：{sync.repository.lastSyncedAt ?? "尚未同步"}</p>
           </CardContent>
         </Card>
         <div className="mt-8 grid gap-4 md:grid-cols-2">

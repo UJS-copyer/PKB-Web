@@ -61,7 +61,8 @@ export function AiAssistantPanel() {
       });
 
       if (!response.ok) {
-        throw new Error(`请求失败：${response.status}`);
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(payload?.error ?? `请求失败：${response.status}`);
       }
 
       let sources: RagSource[] = [];
@@ -114,7 +115,7 @@ export function AiAssistantPanel() {
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <p className="font-mono text-xs uppercase tracking-[0.22em] text-muted-foreground">RAG Assistant</p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight">Ask your knowledge base.</h1>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight">向你的知识库提问</h1>
         </div>
         <Button variant="outline" size="sm" onClick={reset}>
           <Plus className="size-4" />
@@ -191,7 +192,7 @@ function MessageBubble({ message, loading }: { message: ChatMessage; loading: bo
 
         {!isUser && message.sources && message.sources.length > 0 ? (
           <div className="mt-4 border-t border-border pt-3">
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Sources</p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">引用来源</p>
             <div className="mt-2 grid gap-2">
               {message.sources.map((source, index) => (
                 <Link

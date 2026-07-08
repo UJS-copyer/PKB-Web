@@ -118,9 +118,6 @@ function buildSocials(settings: Pick<SiteSettings, "email" | "github">): SocialL
   if (settings.github) {
     links.push({ href: settings.github, label: "GitHub" });
   }
-  if (settings.email) {
-    links.push({ href: `mailto:${settings.email}`, label: "Email" });
-  }
   return links;
 }
 

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { formatNoteDate, getPublishedNotes } from "@/lib/content/source";
 
 export const metadata: Metadata = {
-  title: "Blog"
+  title: "博客"
 };
 
 export const revalidate = 60;

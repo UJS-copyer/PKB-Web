@@ -17,7 +17,7 @@ export function HomeHero({ settings }: { settings: SiteSettings }) {
           transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
         >
           <Badge variant="accent" className="mb-6 font-mono uppercase tracking-[0.24em]">
-            Obsidian Native Garden
+            Obsidian 原生数字花园
           </Badge>
           <h1 className="max-w-4xl text-5xl font-semibold tracking-tight text-balance sm:text-6xl lg:text-7xl">
             {settings.slogan}
@@ -37,7 +37,7 @@ export function HomeHero({ settings }: { settings: SiteSettings }) {
               />
             </div>
             <Button type="submit" size="lg" className="rounded-full">
-              Explore
+              开始探索
               <ArrowRight className="size-4" />
             </Button>
           </form>
@@ -67,14 +67,14 @@ export function HomeHero({ settings }: { settings: SiteSettings }) {
             />
             <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
               <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                Always syncing
+                持续同步中
               </span>
               <span className="flex items-center gap-2 text-xs text-muted-foreground">
                 <span className="relative flex size-2">
                   <span className="absolute inline-flex size-full animate-ping rounded-full bg-accent opacity-75" />
                   <span className="relative inline-flex size-2 rounded-full bg-accent" />
                 </span>
-                Online
+                在线
               </span>
             </div>
           </div>

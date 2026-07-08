@@ -8,7 +8,7 @@ import { getAiConfig, getAiConfigStatus } from "@/lib/ai/config";
 import { getEmbeddingJobState } from "@/lib/rag/job-runner";
 
 export const metadata: Metadata = {
-  title: "AI Config"
+  title: "AI 配置"
 };
 
 export default async function AdminAiConfigPage() {
@@ -16,18 +16,18 @@ export default async function AdminAiConfigPage() {
 
   return (
     <main>
-      <AdminPageHeader
+        <AdminPageHeader
         eyebrow="Admin / AI"
-        title="AI Config"
+        title="AI 配置"
         description="配置 RAG 问答所需的模型、Embedding、检索参数和系统 Prompt。"
       />
       <section className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="mb-6 grid gap-4 md:grid-cols-3">
           {[
-            ["Chat API", status.chatConfigured ? "Ready" : "Missing", "依赖 OPENAI_API_KEY，可配合 OPENAI_BASE_URL 使用中转"],
-            ["Embedding API", status.embeddingConfigured ? "Ready" : "Missing", "依赖 EMBEDDING_API_KEY / EMBEDDING_BASE_URL"],
-            ["Qdrant", status.qdrantConfigured ? "Ready" : "Missing", "依赖 QDRANT_URL / QDRANT_API_KEY"],
-            ["Embeddings", String(status.chunkCount), `${status.noteCount} 篇有效笔记可用于向量化`]
+            ["对话 API", status.chatConfigured ? "已就绪" : "缺失", `端点：${status.chatEndpoint}`],
+            ["向量 API", status.embeddingConfigured ? "已就绪" : "缺失", `端点：${status.embeddingEndpoint}`],
+            ["Qdrant", status.qdrantConfigured ? "已就绪" : "缺失", "依赖 QDRANT_URL / QDRANT_API_KEY"],
+            ["向量分片", String(status.chunkCount), `${status.noteCount} 篇有效笔记可用于向量化`]
           ].map(([label, value, hint], index) => (
             <Card key={`${label}-${index}`}>
               <CardHeader>
@@ -40,6 +40,28 @@ export default async function AdminAiConfigPage() {
             </Card>
           ))}
         </div>
+        {status.warnings.length > 0 ? (
+          <Card className="mb-6 border-amber-500/30 bg-amber-500/5">
+            <CardHeader>
+              <CardTitle>风险与告警</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm text-muted-foreground">
+              {status.warnings.map((warning) => (
+                <p key={warning}>- {warning}</p>
+              ))}
+              <p>- 公网 AI 接口已启用基础限流：{status.rateLimitLabel}。</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>安全提示</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              公网 AI 接口已启用基础限流：{status.rateLimitLabel}。若后续访问量变大，建议再接入验证码、Vercel Firewall 或独立网关。
+            </CardContent>
+          </Card>
+        )}
         <Card>
           <CardHeader>
             <CardTitle>RAG 参数</CardTitle>

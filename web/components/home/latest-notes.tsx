@@ -13,7 +13,7 @@ export function LatestNotes({ notes }: { notes: NoteMeta[] }) {
         <div className="mb-10 flex items-end justify-between gap-6">
           <div>
             <p className="font-mono text-xs uppercase tracking-[0.24em] text-muted-foreground">
-              01 - Recent Notes
+              01 - 最近笔记
             </p>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight">最近更新</h2>
           </div>
@@ -21,7 +21,7 @@ export function LatestNotes({ notes }: { notes: NoteMeta[] }) {
             href="/knowledge"
             className="hidden font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
           >
-            View all
+            查看全部
           </Link>
         </div>
         <div className="grid gap-3">
@@ -52,7 +52,7 @@ export function LatestNotes({ notes }: { notes: NoteMeta[] }) {
                     <span>
                       {date.displayDateLabel} {date.displayDate}
                     </span>
-                    <span>{note.readingMinutes} min</span>
+                    <span>{note.readingMinutes} 分钟</span>
                     <ArrowUpRight className="size-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                   </div>
                 </PendingLink>

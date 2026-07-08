@@ -42,6 +42,10 @@ function hrefFromSlug(slug: string) {
   return `/knowledge/${slug.split("/").map(encodeURIComponent).join("/")}`;
 }
 
+function noteCacheTag(slug: string) {
+  return `note:${Buffer.from(slug, "utf8").toString("base64url")}`;
+}
+
 function toNote(row: {
   sourcePath: string;
   title: string;
@@ -160,7 +164,7 @@ export async function getDatabaseNoteBySlug(slug: string) {
   return getRuntimeCached(`content:note:${slug}`, contentRuntimeTtlMs, () =>
     unstable_cache(() => queryDatabaseNoteBySlug(slug), ["database-note", slug], {
       revalidate: contentRevalidateSeconds,
-      tags: ["content", `note:${slug}`]
+      tags: ["content", noteCacheTag(slug)]
     })()
   );
 }

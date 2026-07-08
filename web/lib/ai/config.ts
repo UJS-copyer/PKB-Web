@@ -23,6 +23,10 @@ export type AiConfigStatus = {
   qdrantConfigured: boolean;
   chunkCount: number;
   noteCount: number;
+  chatEndpoint: string;
+  embeddingEndpoint: string;
+  rateLimitLabel: string;
+  warnings: string[];
 };
 
 type AiConfigLike = {
@@ -94,7 +98,11 @@ export async function getAiConfigStatus(): Promise<AiConfigStatus> {
         embeddingConfigured: Boolean(process.env.EMBEDDING_API_KEY ?? process.env.OPENAI_API_KEY),
         qdrantConfigured: Boolean(process.env.QDRANT_URL && process.env.QDRANT_API_KEY),
         chunkCount: 0,
-        noteCount: 0
+        noteCount: 0,
+        chatEndpoint: process.env.OPENAI_BASE_URL?.trim() || "官方默认端点",
+        embeddingEndpoint: process.env.EMBEDDING_BASE_URL?.trim() || process.env.OPENAI_BASE_URL?.trim() || "官方默认端点",
+        rateLimitLabel: "每个 IP 10 分钟最多 20 次对话请求",
+        warnings: buildAiWarnings()
       };
     }
 
@@ -108,9 +116,39 @@ export async function getAiConfigStatus(): Promise<AiConfigStatus> {
       embeddingConfigured: Boolean(process.env.EMBEDDING_API_KEY ?? process.env.OPENAI_API_KEY),
       qdrantConfigured: Boolean(process.env.QDRANT_URL && process.env.QDRANT_API_KEY),
       chunkCount,
-      noteCount
+      noteCount,
+      chatEndpoint: process.env.OPENAI_BASE_URL?.trim() || "官方默认端点",
+      embeddingEndpoint: process.env.EMBEDDING_BASE_URL?.trim() || process.env.OPENAI_BASE_URL?.trim() || "官方默认端点",
+      rateLimitLabel: "每个 IP 10 分钟最多 20 次对话请求",
+      warnings: buildAiWarnings()
     };
   });
+}
+
+function buildAiWarnings() {
+  const warnings: string[] = [];
+
+  if (!process.env.OPENAI_API_KEY) {
+    warnings.push("未配置聊天 API Key，前台 AI 将只能返回降级提示。");
+  }
+
+  if (!process.env.EMBEDDING_API_KEY && !process.env.OPENAI_API_KEY) {
+    warnings.push("未配置 Embedding API Key，向量检索与重建会失败。");
+  }
+
+  if (!process.env.QDRANT_URL || !process.env.QDRANT_API_KEY) {
+    warnings.push("Qdrant 连接信息不完整，RAG 检索无法正常工作。");
+  }
+
+  if (process.env.OPENAI_BASE_URL && !process.env.OPENAI_API_KEY) {
+    warnings.push("已填写聊天中转地址，但缺少对应 API Key。");
+  }
+
+  if (process.env.EMBEDDING_BASE_URL && !process.env.EMBEDDING_API_KEY && !process.env.OPENAI_API_KEY) {
+    warnings.push("已填写 Embedding 中转地址，但缺少可用 API Key。");
+  }
+
+  return warnings;
 }
 
 export async function saveAiConfig(input: AiRuntimeConfig) {

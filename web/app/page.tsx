@@ -16,7 +16,7 @@ export default async function HomePage() {
       <HomeHero settings={settings} />
       <HomeAbout settings={settings} />
       <LatestNotes notes={recentNotes} />
-      <FeaturedProjects projects={projects} />
+      <FeaturedProjects projects={projects.slice(0, 3)} />
     </main>
   );
 }
